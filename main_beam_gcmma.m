@@ -1,6 +1,24 @@
+% This file is part of LEnOP, a code to optimize a design model for 
+% minimum life cycle energy subject to functional requirements.
+% 
+% Copyright (C) 2018 Ciarán O'Reilly <ciaran@kth.se>
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
+% 
 % main_beam_gcmma.m
 
-restart = 1;
+restart=1;
 
 if restart
   
