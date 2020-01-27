@@ -35,22 +35,22 @@ if restart
   global model material
   model.loadcase='simple_pt';
   model.F=-1e4;
-  model.xF=0.5;
-  model.L=1;
+  model.xF=1;
+  model.L=2;
   model.xsection='layered';
-  model.B=[0.1 0.1 0.1];
+  model.B=1;
   model.H=[0.05 0.05 0.05];
-  model.material={'Steel' 'Steel' 'Steel'};
+  model.material={'CFRP' 'PUR' 'CFRP'};
   model.alpha=[1 1 1];
   material=LEnOpFunctions.blendMaterials(model,materialsData);
   model=LEnOpFunctions.updateMaterialProps(model,material);
   model=LEnOpFunctions.updateDependentVars(model);
   
   %% set optimisation params
-  xval=[model.B(1) model.B(2) model.B(3) model.H(1) model.H(2) model.H(3)]';
-  xnam={'B(1)' 'B(2)' 'B(3)' 'H(1)' 'H(2)' 'H(3)'};
-  xmin=[0.05 0.01 0.05 0.01 0.01 0.01]';
-  xmax=[0.2 0.2 0.2 0.2 0.2 0.2]';
+  xval=[model.H(1) model.H(2) model.H(3)]';
+  xnam={'H(1)' 'H(2)' 'H(3)'};
+  xmin=[0.001 0.001 0.001]';
+  xmax=[0.2 0.2 0.2]';
   maxiter=10;
   
   %% initiate GCMMA

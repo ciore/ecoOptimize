@@ -154,7 +154,7 @@ classdef GCMMAFunctions
     function dispIter(gcmma)
       if gcmma.iout(end,1)==1
         fprintf(['GCMMA iterations:\n'])
-        fprintf(['   iter   nini   f0val',repmat(' ',1,12-5),'xval',repmat(' ',1,gcmma.n*12-4),'fval\n'])
+        fprintf(['   iter   nini   f0val',repmat(' ',1,12-5),'xval',repmat(' ',1,gcmma.n*12-4),'fval-fmax\n'])
       end
       format=['%7i%7i',repmat('%12.3e',1,1+gcmma.n+gcmma.m),'\n'];
       fprintf(format,[gcmma.iout(end,:) gcmma.fout(end,:) gcmma.xout(end,:) gcmma.cout(end,:)])
