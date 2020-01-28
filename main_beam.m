@@ -1,5 +1,5 @@
-% This file is part of LEnOP, a code to optimize a design model for 
-% minimum life cycle energy subject to functional requirements.
+% This file is part of ecoOptimize, a code to optimize a design model for 
+% minimum eco impacts subject to functional requirements.
 % 
 % Copyright (C) 2018 Ciarán O'Reilly <ciaran@kth.se>
 % 
@@ -16,7 +16,7 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 % 
-% main_beam_gcmma.m
+% main.m
 
 restart=1;
 
@@ -38,14 +38,14 @@ if restart
   model.xF=0.5;
   model.L=1;
   model.xsection='layered';
-  model.B=[0.1 0.1 0.1];
-  model.H=[0.05 0.1 0.05];
+  model.B=[0.15 0.15 0.15];
+  model.H=[0.05 0.05 0.05];
   model.material={'Steel' 'Steel' 'Steel'};
   model.alpha=[1 1 1];
-  material=LEnOpFunctions.blendMaterials(model,materialsData);
-  model=LEnOpFunctions.updateMaterialProps(model,material);
-  model=LEnOpFunctions.updateDependentVars(model);
-  figure(1), clf, subplot(1,2,1), LEnOpFunctions.dispModel(model)
+  material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
+  model=ecoOptimizeFuncs.updateMaterialProps(model,material);
+  model=ecoOptimizeFuncs.updateDependentVars(model);
+  figure(1), clf, subplot(1,2,1), ecoOptimizeFuncs.dispModel(model)
 
   
   %% set optimisation params
@@ -56,25 +56,25 @@ if restart
   maxiter=10;
   
   %% initiate GCMMA
-  gcmma=GCMMAFunctions.init(xval,xnam,xmin,xmax,maxiter);
+  gcmma=GCMMAFuncs.init(xval,xnam,xmin,xmax,maxiter);
 
 end
 
 %% run GCMMA
 figure(2)
-[gcmma,xval]=GCMMAFunctions.run(gcmma,xval,xnam,xmin,xmax,true);
-[f0val,fval]=LEnOpFunctions.optFunctions(xval,xnam,false);
+[gcmma,xval]=GCMMAFuncs.run(gcmma,xval,xnam,xmin,xmax,true);
+[f0val,fval]=ecoOptimizeFuncs.optFunctions(xval,xnam,false);
 
 %% plot result
-figure(1), subplot(1,2,2), LEnOpFunctions.dispModel(model)
-figure(2), clf, GCMMAFunctions.plotIter(gcmma)
+figure(1), subplot(1,2,2), ecoOptimizeFuncs.dispModel(model)
+figure(2), clf, GCMMAFuncs.plotIter(gcmma)
 
 %% check results
-mass=LEnOpFunctions.computeMass(model)
-LCE=LEnOpFunctions.computeLCE(model)
+mass=ecoOptimizeFuncs.computeMass(model)
+LCE=ecoOptimizeFuncs.computeLCE(model)
 beam=computeEulerBernoulli(model);
-figure(3), clf, plot(beam.x,beam.w)
+figure(3), clf, plot(beam.x,beam.w), xlabel('x [m]'), xlabel('w [m]')
 fval=max(abs(beam.w))
 % comsol=runCOMSOLBeam(model);
 % v=mpheval(comsol,'v','edim',1,'dataset','dset1');
-% figure(3), clf, plot(beam.x,beam.w,v.p(1,:),v.d1,'*')
+% figure(3), clf, plot(beam.x,beam.w,v.p(1,:),v.d1,'*'), xlabel('x [m]'), xlabel('w [m]')

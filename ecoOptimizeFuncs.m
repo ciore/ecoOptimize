@@ -1,4 +1,22 @@
-classdef LEnOpFunctions
+% This file is part of ecoOptimize, a code to optimize a design model for 
+% minimum eco impacts subject to functional requirements.
+% 
+% Copyright (C) 2018 Ciarán O'Reilly <ciaran@kth.se>
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+classdef ecoOptimizeFuncs
   methods(Static)
     
     %%
@@ -51,7 +69,7 @@ classdef LEnOpFunctions
     
     %%
     function LCE=computeLCE(model)
-      mass=LEnOpFunctions.computeMass(model);
+      mass=ecoOptimizeFuncs.computeMass(model);
       %% production phase
       Ep_kg=model.EProd; %[J/kg]
       Ep=Ep_kg*mass;
@@ -116,26 +134,26 @@ classdef LEnOpFunctions
       for i=1:numel(x)
         eval(['model.',xnam{i},'=x(i);'])
       end
-      material=LEnOpFunctions.blendMaterials(model,materialsData);
-      model=LEnOpFunctions.updateMaterialProps(model,material);
-      model=LEnOpFunctions.updateDependentVars(model);
-      f0val = LEnOpFunctions.computeLCE(model);
-      fval  = scale.*[LEnOpFunctions.computeConstraints(model,1)'-fmax];
+      material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
+      model=ecoOptimizeFuncs.updateMaterialProps(model,material);
+      model=ecoOptimizeFuncs.updateDependentVars(model);
+      f0val = ecoOptimizeFuncs.computeLCE(model);
+      fval  = scale.*[ecoOptimizeFuncs.computeConstraints(model,1)'-fmax];
       if grads
         dx=1e-4;
         df0dx=[];
         dfdx=[];
         for i=1:numel(x)
           eval(['model.',xnam{i},'=x(i)+dx;'])
-          material=LEnOpFunctions.blendMaterials(model,materialsData);
-          model=LEnOpFunctions.updateMaterialProps(model,material);
-          model=LEnOpFunctions.updateDependentVars(model);
-          df0dx = [df0dx; (LEnOpFunctions.computeLCE(model)-f0val)/dx];
-          dfdx  = [dfdx, scale.*[LEnOpFunctions.computeConstraints(model,1)'-(fval./scale+fmax)]/dx];
+          material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
+          model=ecoOptimizeFuncs.updateMaterialProps(model,material);
+          model=ecoOptimizeFuncs.updateDependentVars(model);
+          df0dx = [df0dx; (ecoOptimizeFuncs.computeLCE(model)-f0val)/dx];
+          dfdx  = [dfdx, scale.*[ecoOptimizeFuncs.computeConstraints(model,1)'-(fval./scale+fmax)]/dx];
           eval(['model.',xnam{i},'=x(i);'])
-          model=LEnOpFunctions.updateDependentVars(model);
-          material=LEnOpFunctions.blendMaterials(model,materialsData);
-          model=LEnOpFunctions.updateMaterialProps(model,material);
+          model=ecoOptimizeFuncs.updateDependentVars(model);
+          material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
+          model=ecoOptimizeFuncs.updateMaterialProps(model,material);
         end
       end
     end
@@ -154,6 +172,7 @@ classdef LEnOpFunctions
       end
       axis([B0(i)-B(i)/10 B0(i)+B(i)+B(i)/10 H0(i)-H(i)/10 H0(i)+H(i)+H(i)/10])
       axis auto, axis equal
+      xlabel('b [m]'), ylabel('h [m]')
     end
     
   end
