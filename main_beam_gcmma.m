@@ -39,12 +39,14 @@ if restart
   model.L=1;
   model.xsection='layered';
   model.B=[0.1 0.1 0.1];
-  model.H=[0.05 0.05 0.05];
+  model.H=[0.05 0.1 0.05];
   model.material={'Steel' 'Steel' 'Steel'};
   model.alpha=[1 1 1];
   material=LEnOpFunctions.blendMaterials(model,materialsData);
   model=LEnOpFunctions.updateMaterialProps(model,material);
   model=LEnOpFunctions.updateDependentVars(model);
+  figure(1), clf, subplot(1,2,1), LEnOpFunctions.dispModel(model)
+
   
   %% set optimisation params
   xval=[model.B(1) model.B(2) model.B(3) model.H(1) model.H(2) model.H(3)]';
@@ -59,17 +61,20 @@ if restart
 end
 
 %% run GCMMA
+figure(2)
 [gcmma,xval]=GCMMAFunctions.run(gcmma,xval,xnam,xmin,xmax,true);
 [f0val,fval]=LEnOpFunctions.optFunctions(xval,xnam,false);
 
-%% plot convergence
-figure(1), clf, GCMMAFunctions.plotIter(gcmma)
+%% plot result
+figure(1), subplot(1,2,2), LEnOpFunctions.dispModel(model)
+figure(2), clf, GCMMAFunctions.plotIter(gcmma)
 
 %% check results
 mass=LEnOpFunctions.computeMass(model)
 LCE=LEnOpFunctions.computeLCE(model)
 beam=computeEulerBernoulli(model);
+figure(3), clf, plot(beam.x,beam.w)
 fval=max(abs(beam.w))
-comsol=runCOMSOLBeam(model);
-v=mpheval(comsol,'v','edim',1,'dataset','dset1');
-figure(2), clf, plot(beam.x,beam.w,v.p(1,:),v.d1,'*')
+% comsol=runCOMSOLBeam(model);
+% v=mpheval(comsol,'v','edim',1,'dataset','dset1');
+% figure(3), clf, plot(beam.x,beam.w,v.p(1,:),v.d1,'*')

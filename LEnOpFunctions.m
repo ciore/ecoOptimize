@@ -81,7 +81,6 @@ classdef LEnOpFunctions
     
     %%
     function fval=computeConstraints(model,update)
-      addpath('../beamEB')
       method='analytical';
       switch method
         case 'analytical'
@@ -139,6 +138,22 @@ classdef LEnOpFunctions
           model=LEnOpFunctions.updateMaterialProps(model,material);
         end
       end
+    end
+    
+    %%
+    function dispModel(model)
+      N=max([numel(model.B) numel(model.H)]);
+      B=repmat(model.B,1,N-numel(model.B)+1);
+      H=repmat(model.H,1,N-numel(model.H)+1);
+      H0=([0 cumsum(H(1:end-1))]-sum(H)/2);
+      B0=-B/2;
+      C=colormap;
+      for i=1:N
+        R=rectangle('Position',[B0(i) H0(i) B(i) H(i)]);
+        set(R,'Facecolor',C(50*(i-1)+1,:))
+      end
+      axis([B0(i)-B(i)/10 B0(i)+B(i)+B(i)/10 H0(i)-H(i)/10 H0(i)+H(i)+H(i)/10])
+      axis auto, axis equal
     end
     
   end
