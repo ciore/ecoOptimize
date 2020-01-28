@@ -1,7 +1,7 @@
 % This file is part of ecoOptimize, a code to optimize a design model for 
 % minimum eco impacts subject to functional requirements.
 % 
-% Copyright (C) 2018 Ciarán O'Reilly <ciaran@kth.se>
+% Copyright (C) 2020 Ciarán O'Reilly <ciaran@kth.se>
 % 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -21,12 +21,18 @@ classdef ecoOptimizeFuncs
     
     %%
     function material=blendMaterials(model,materialsData)
+      N=max(sum(not(cellfun(@isempty,model.material)),1));
+      if N>1
+        model.alpha(N,:)=1-sum(model.alpha(1:N-1,:),1);
+      end
       fnames=fieldnames(materialsData);
       fnames=fnames(not(ismember(fnames,'info')));
       for j=1:numel(fnames)
         eval(['material.',fnames{j},'=zeros(size(model.alpha));'])
         for i=1:numel(model.alpha)
-          eval(['material.',fnames{j},'(i)=materialsData(ismember([materialsData.info],model.material(i))).',fnames{j},'{1};'])
+          if not(cellfun(@isempty,model.material(i)))
+            eval(['material.',fnames{j},'(i)=materialsData(ismember([materialsData.info],model.material(i))).',fnames{j},'{1};'])
+          end
         end
         eval(['material.',fnames{j},'=sum(material.',fnames{j},'.*model.alpha,1);'])
       end
@@ -126,7 +132,7 @@ classdef ecoOptimizeFuncs
     end
     
     %%
-    function [f0val,fval,df0dx,dfdx] = optFunctions(x,xnam,grads)
+    function [f0val,fval,df0dx,dfdx] = optFuncs(x,xnam,grads)
       %  This calculates function values and gradients
       global model material materialsData
       fmax=[1e-3]';% -60]';
@@ -151,9 +157,9 @@ classdef ecoOptimizeFuncs
           df0dx = [df0dx; (ecoOptimizeFuncs.computeLCE(model)-f0val)/dx];
           dfdx  = [dfdx, scale.*[ecoOptimizeFuncs.computeConstraints(model,1)'-(fval./scale+fmax)]/dx];
           eval(['model.',xnam{i},'=x(i);'])
-          model=ecoOptimizeFuncs.updateDependentVars(model);
           material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
           model=ecoOptimizeFuncs.updateMaterialProps(model,material);
+          model=ecoOptimizeFuncs.updateDependentVars(model);
         end
       end
     end

@@ -1,7 +1,7 @@
 % This file is part of ecoOptimize, a code to optimize a design model for 
 % minimum eco impacts subject to functional requirements.
 % 
-% Copyright (C) 2018 Ciarán O'Reilly <ciaran@kth.se>
+% Copyright (C) 2020 Ciarán O'Reilly <ciaran@kth.se>
 % 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -40,19 +40,19 @@ if restart
   model.xsection='layered';
   model.B=1;
   model.H=[0.05 0.05 0.05];
-  model.material={'CFRP' 'PUR' 'CFRP';'GFRP' 'PET' 'GFRP'};
-  model.alpha=[1 1 1; 0 0 0];
+  model.material={'GFRP' 'PUR' 'GFRP';'CFRP' 'PVC' 'CFRP'};
+  model.alpha=[0.3 0.4 0.5];
   material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
   model=ecoOptimizeFuncs.updateMaterialProps(model,material);
   model=ecoOptimizeFuncs.updateDependentVars(model);
   figure(1), clf, subplot(2,1,1), ecoOptimizeFuncs.dispModel(model)
   
   %% set optimisation params
-  xval=[model.H(1) model.H(2) model.H(3)]';
-  xnam={'H(1)' 'H(2)' 'H(3)'};
-  xmin=[0.001 0.001 0.001]';
-  xmax=[0.2 0.2 0.2]';
-  maxiter=10;
+  xval=[model.H(1) model.H(2) model.H(3) model.alpha(1,1) model.alpha(1,2) model.alpha(1,3)]';
+  xnam={'H(1)' 'H(2)' 'H(3)' 'alpha(1,1)' 'alpha(1,2)' 'alpha(1,3)'};
+  xmin=[0.001 0.001 0.001 0 0 0]';
+  xmax=[0.2 0.2 0.2 1 1 1]';
+  maxiter=30;
   
   %% initiate GCMMA
   gcmma=GCMMAFuncs.init(xval,xnam,xmin,xmax,maxiter);
@@ -62,7 +62,7 @@ end
 %% run GCMMA
 figure(2)
 [gcmma,xval]=GCMMAFuncs.run(gcmma,xval,xnam,xmin,xmax,true);
-[f0val,fval]=ecoOptimizeFuncs.optFunctions(xval,xnam,false);
+[f0val,fval]=ecoOptimizeFuncs.optFuncs(xval,xnam,false);
 
 %% plot results
 figure(1), subplot(2,1,2), ecoOptimizeFuncs.dispModel(model)
@@ -72,8 +72,8 @@ figure(2), clf, GCMMAFuncs.plotIter(gcmma)
 mass=ecoOptimizeFuncs.computeMass(model)
 LCE=ecoOptimizeFuncs.computeLCE(model)
 beam=computeEulerBernoulli(model);
-figure(3), clf, plot(beam.x,beam.w), xlabel('x [m]'), xlabel('w [m]')
 fval=max(abs(beam.w))
+figure(3), clf, plot(beam.x,beam.w), xlabel('l [m]'), ylabel('w [m]')
 % comsol=runCOMSOLBeam(model);
 % v=mpheval(comsol,'v','edim',1,'dataset','dset1');
 % figure(3), clf, plot(beam.x,beam.w,v.p(1,:),v.d1,'*'), xlabel('x [m]'), xlabel('w [m]')

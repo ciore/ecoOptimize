@@ -1,7 +1,7 @@
 % This file is part of ecoOptimize, a code to optimize a design model for 
 % minimum eco impacts subject to functional requirements.
 % 
-% Copyright (C) 2018 Ciarán O'Reilly <ciaran@kth.se>
+% Copyright (C) 2020 Ciarán O'Reilly <ciaran@kth.se>
 % 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ classdef GCMMAFuncs
     %%
     function gcmma = init(xval,xnam,xmin,xmax,maxiter)
       % This sets up the GCMMA parameters and starting points
-      [f0val,fval,df0dx,dfdx] = ecoOptimizeFuncs.optFunctions(xval,xnam,true);
+      [f0val,fval,df0dx,dfdx] = ecoOptimizeFuncs.optFuncs(xval,xnam,true);
       m=size(fval,1);
       n=size(xval,1);
       epsimin = 0.0000001;
@@ -68,7 +68,7 @@ classdef GCMMAFuncs
       %%%% and gradients of the objective- and constraint functions at xval.
       %%%% The results should be put in f0val, df0dx, fval and dfdx:
       if outeriter < 0.5
-        [f0val,fval,df0dx,dfdx] = ecoOptimizeFuncs.optFunctions(xval,xnam,true);
+        [f0val,fval,df0dx,dfdx] = ecoOptimizeFuncs.optFuncs(xval,xnam,true);
         innerit=0;
         iout = [outeriter innerit];
         xout = [xval'];
@@ -94,7 +94,7 @@ classdef GCMMAFuncs
         %%%% of the objective- and constraint functions at the point xmma
         %%%% ( = the optimal solution of the subproblem).
         %%%% The results should be put in f0valnew and fvalnew.
-        [f0valnew,fvalnew] = ecoOptimizeFuncs.optFunctions(xmma,xnam,false);
+        [f0valnew,fvalnew] = ecoOptimizeFuncs.optFuncs(xmma,xnam,false);
         %%%% It is checked if the approximations are conservative:
         [conserv] = concheck(m,epsimin,f0app,f0valnew,fapp,fvalnew);
         %%%% While the approximations are non-conservative (conserv=0),
@@ -115,7 +115,7 @@ classdef GCMMAFuncs
             %%%% of the objective- and constraint functions at the point xmma
             %%%% ( = the optimal solution of the subproblem).
             %%%% The results should be put in f0valnew and fvalnew:
-            [f0valnew,fvalnew] = ecoOptimizeFuncs.optFunctions(xmma,xnam,false);
+            [f0valnew,fvalnew] = ecoOptimizeFuncs.optFuncs(xmma,xnam,false);
             %%%% It is checked if the approximations have become conservative:
             [conserv] = concheck(m,epsimin,f0app,f0valnew,fapp,fvalnew);
           end
@@ -127,7 +127,7 @@ classdef GCMMAFuncs
         %%%% The user should now calculate function values and gradients
         %%%% of the objective- and constraint functions at xval.
         %%%% The results should be put in f0val, df0dx, fval and dfdx:
-        [f0val,fval,df0dx,dfdx] = ecoOptimizeFuncs.optFunctions(xval,xnam,true);
+        [f0val,fval,df0dx,dfdx] = ecoOptimizeFuncs.optFuncs(xval,xnam,true);
         %%%% The residual vector of the KKT conditions is calculated:
         [residu,kktnorm,residumax] = ...
           kktcheck(m,n,xmma,ymma,zmma,lam,xsi,eta,mu,zet,s, ...
