@@ -24,28 +24,20 @@ if restart
   
   clear all
   clear global
-  addpath('.') %path to material database
-  addpath('../beamEB') %path to constraint solver
+  addpath('.') %path to material database [you could pick a different material database]
+  addpath('../beamEB') %path to constraint solver [you could add a different solver]
   
-  %% select a material
+  %% load material database
   global materialsData
   materialsData=importdata('materialData.mat');
   
   %% initiate model of the panel
   global model material
-  model.loadcase='simple_pt';
-  model.F=-1e4;
-  model.xF=1;
-  model.L=2;
-  model.xsection='layered';
-  model.B=1;
-  model.H=[0.05 0.05 0.05];
-  model.material={'GFRP' 'PUR' 'GFRP';'CFRP' 'PVC' 'CFRP'};
-  model.alpha=[0.3 0.4 0.5];
-  material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
-  model=ecoOptimizeFuncs.updateMaterialProps(model,material);
+  model=initModelSandwich; %define the model in function
+  material=ecoOptimizeFuncs.blendMaterials(model,materialsData); %blend materials from database according to alpha
+  model=ecoOptimizeFuncs.updateMaterialProps(model,material); %map blended material into model
   model=ecoOptimizeFuncs.updateDependentVars(model);
-  figure(1), clf, subplot(2,1,1), ecoOptimizeFuncs.dispModel(model)
+  figure(1), clf, subplot(2,1,1), ecoOptimizeFuncs.dispModel(model), title('Initial')
   
   %% set optimisation params
   xval=[model.H(1) model.H(2) model.H(3) model.alpha(1,1) model.alpha(1,2) model.alpha(1,3)]';
@@ -60,20 +52,41 @@ if restart
 end
 
 %% run GCMMA
+disp(['optimizing for: ',model.objfunc])
 figure(2)
 [gcmma,xval]=GCMMAFuncs.run(gcmma,xval,xnam,xmin,xmax,true);
 [f0val,fval]=ecoOptimizeFuncs.optFuncs(xval,xnam,false);
 
-%% plot results
-figure(1), subplot(2,1,2), ecoOptimizeFuncs.dispModel(model)
+%% view results
+figure(1), subplot(2,1,2), ecoOptimizeFuncs.dispModel(model), title('Current')
 figure(2), clf, GCMMAFuncs.plotIter(gcmma)
-
-%% check results
 mass=ecoOptimizeFuncs.computeMass(model)
 LCE=ecoOptimizeFuncs.computeLCE(model)
-beam=computeEulerBernoulli(model);
-fval=max(abs(beam.w))
-figure(3), clf, plot(beam.x,beam.w), xlabel('l [m]'), ylabel('w [m]')
+LCCO2=ecoOptimizeFuncs.computeLCCO2(model)
+LCCost=ecoOptimizeFuncs.computeLCCost(model)
+
+% %% check constraints
+% beam=computeEulerBernoulli(model);
+% fval=max(abs(beam.w));
+% figure(3), clf, plot(beam.x,beam.w), xlabel('l [m]'), ylabel('w [m]')
 % comsol=runCOMSOLBeam(model);
 % v=mpheval(comsol,'v','edim',1,'dataset','dset1');
 % figure(3), clf, plot(beam.x,beam.w,v.p(1,:),v.d1,'*'), xlabel('x [m]'), xlabel('w [m]')
+
+
+%% FUNCTIONS
+
+%%
+function model=initModelSandwich
+  model.objfunc='LCE';
+  model.driveDistTotal=1e5;
+  model.loadcase='simple_pt';
+  model.P=-1e4;
+  model.xP=1;
+  model.L=2;
+  model.xsection='layered';
+  model.B=1;
+  model.H=[0.05 0.05 0.05];
+  model.material={'GFRP' 'PUR' 'GFRP';'CFRP' 'PVC' 'CFRP'};
+  model.alpha=[0.3 0.4 0.5];
+end

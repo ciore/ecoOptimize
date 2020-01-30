@@ -24,24 +24,16 @@ if restart
   
   clear all
   clear global
+  addpath('.') %path to material database [you could pick a different material database]
+  addpath('../beamEB') %path to constraint solver [you could add a different solver]
   
-  %% select a material
-  addpath('.')
+  %% load material database
   global materialsData
-  materialsData=load('materialData.mat');
-  materialsData=materialsData.data;
-  
+  materialsData=importdata('materialData.mat');
+    
   %% initiate model of the panel
   global model material
-  model.loadcase='simple_pt';
-  model.F=-1e4;
-  model.xF=0.5;
-  model.L=1;
-  model.xsection='layered';
-  model.B=[0.15 0.15 0.15];
-  model.H=[0.05 0.05 0.05];
-  model.material={'Steel' 'Al-alloys' 'Steel'};
-  model.alpha=[1 1 1];
+  model=initModelBeam;
   material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
   model=ecoOptimizeFuncs.updateMaterialProps(model,material);
   model=ecoOptimizeFuncs.updateDependentVars(model);
@@ -53,7 +45,7 @@ if restart
   xnam={'B(1)' 'B(2)' 'B(3)' 'H(1)' 'H(2)' 'H(3)'};
   xmin=[0.05 0.005 0.05 0.005 0.005 0.005]';
   xmax=[0.2 0.2 0.2 0.2 0.2 0.2]';
-  maxiter=10;
+  maxiter=20;
   
   %% initiate GCMMA
   gcmma=GCMMAFuncs.init(xval,xnam,xmin,xmax,maxiter);
@@ -61,20 +53,40 @@ if restart
 end
 
 %% run GCMMA
+disp(['optimizing for: ',model.objfunc])
 figure(2)
 [gcmma,xval]=GCMMAFuncs.run(gcmma,xval,xnam,xmin,xmax,true);
 [f0val,fval]=ecoOptimizeFuncs.optFuncs(xval,xnam,false);
 
-%% plot result
+%% view results
 figure(1), subplot(1,2,2), ecoOptimizeFuncs.dispModel(model)
 figure(2), clf, GCMMAFuncs.plotIter(gcmma)
-
-%% check results
 mass=ecoOptimizeFuncs.computeMass(model)
 LCE=ecoOptimizeFuncs.computeLCE(model)
-beam=computeEulerBernoulli(model);
-figure(3), clf, plot(beam.x,beam.w), xlabel('l [m]'), ylabel('w [m]')
-fval=max(abs(beam.w))
+LCCO2=ecoOptimizeFuncs.computeLCCO2(model)
+LCCost=ecoOptimizeFuncs.computeLCCost(model)
+
+% %% check results
+% %% check constraints
+% beam=computeEulerBernoulli(model);
+% fval=max(abs(beam.w));
+% figure(3), clf, plot(beam.x,beam.w), xlabel('l [m]'), ylabel('w [m]')
 % comsol=runCOMSOLBeam(model);
 % v=mpheval(comsol,'v','edim',1,'dataset','dset1');
 % figure(3), clf, plot(beam.x,beam.w,v.p(1,:),v.d1,'*'), xlabel('x [m]'), xlabel('w [m]')
+
+
+%%
+function model=initModelBeam
+  model.objfunc='LCE';
+  model.driveDistTotal=1e5;
+  model.loadcase='simple_pt';
+  model.P=-1e4;
+  model.xP=0.5;
+  model.L=1;
+  model.xsection='layered';
+  model.B=[0.15 0.15 0.15];
+  model.H=[0.05 0.05 0.05];
+  model.material={'Steel' 'Al-alloys' 'Steel'};
+  model.alpha=[1 1 1];
+end

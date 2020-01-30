@@ -44,7 +44,12 @@ classdef ecoOptimizeFuncs
       model.nui=material.poissonsRatio;
       model.rhoi=material.density;
       model.EProdi=material.productionEnergy;
-      model.EEoLi=material.eoLPotentialEnergy;
+      model.EDispi=material.disposalEnergy;
+      model.EEoLi=material.eolEnergy;
+      model.CO2Prodi=material.productionCO2;
+      model.CO2Dispi=material.diposalCO2;
+      model.CO2EoLi=material.eolCO2;
+      model.Costi=material.price;
     end
     
     %%
@@ -64,7 +69,12 @@ classdef ecoOptimizeFuncs
           model.A=sum(A);
           model.I=sum(I);
           model.EProd=sum(model.EProdi.*A)/sum(A);
+          model.EDisp=sum(model.EDispi.*A)/sum(A);
           model.EEoL=sum(model.EEoLi.*A)/sum(A);
+          model.CO2Prod=sum(model.CO2Prodi.*A)/sum(A);
+          model.CO2Disp=sum(model.CO2Dispi.*A)/sum(A);
+          model.CO2EoL=sum(model.CO2EoLi.*A)/sum(A);
+          model.Cost=sum(model.Costi.*A)/sum(A);
       end
     end
     
@@ -76,31 +86,103 @@ classdef ecoOptimizeFuncs
     %%
     function LCE=computeLCE(model)
       mass=ecoOptimizeFuncs.computeMass(model);
-      %% production phase
+      % production phase
       Ep_kg=model.EProd; %[J/kg]
       Ep=Ep_kg*mass;
-      %% use phase
-      driveDistTotal=1e5; %[km] %total driving distance
-      usemodel='simple';
+      % use phase
+      usemodel='physicsbased';
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
           Eu_km_kg=10.8/100*33.7e6/1400; %[J/km/kg]
-          Eu=Eu_km_kg*driveDistTotal*mass; %[J]
+          Eu=Eu_km_kg*model.driveDistTotal*mass; %[J]
         case 'physicsbased'
-          %more advanced model based on drive cycle energy (Koffler (2010))
+          %more advanced model based on drive cycle energy (O'Reilly (2016))
           crr=0.01*0.85; %[-] %coefficient of effective rolling resistance
           CR=11013; %[m] drive cycle rolling resistance constant
           CA=1227; %[m^2/s^2] drive cycle acceleration constant
-          diffEff=0.42; %[-] differential efficiency
+          diffEff=0.42; %[-] differential efficiency (petrol)
           Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
-          Eu=Eu_km_kg*driveDistTotal*mass; %[J]
+          Eu=Eu_km_kg*model.driveDistTotal*mass; %[J]
       end
-      %% end-of-life phase
+      % disposal phase
+      Ed_kg=model.EDisp; %[J/kg]
+      Ed=Ed_kg*mass; %[J]
+      % end-of-life phase
       Ee_kg=model.EEoL; %[J/kg]
       Ee=Ee_kg*mass; %[J]
-      %% total
-      LCE=1e-9*(Ep+Eu+Ee);
+      % total
+      LCE=[Ep Eu Ed Ee]*1e-9;
+    end
+    
+    %%
+    function LCCO2=computeLCCO2(model)
+      mass=ecoOptimizeFuncs.computeMass(model);
+      % production phase
+      CO2p_kg=model.CO2Prod; %[kg/kg]
+      CO2p=CO2p_kg*mass; %[kg]
+      % use phase
+      usemodel='physicsbased';
+      switch usemodel
+        case 'simple'
+          %simple model based on fuel efficiency
+          CO2u_km_kg=10.8/100*2.31/1400; %[kg/km/kg]
+          CO2u=CO2u_km_kg*model.driveDistTotal*mass; %[kg]
+        case 'physicsbased'
+          %more advanced model based on drive cycle energy
+          crr=0.01*0.85; %[-] %coefficient of effective rolling resistance
+          CR=11013; %[m] drive cycle rolling resistance constant
+          CA=1227; %[m^2/s^2] drive cycle acceleration constant
+          diffEff=0.42; %[-] differential efficiency (petrol)
+          Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
+          heatValueFuel=43.5*1e6*0.75; %[J/L]
+          CO2Fuel=2.31; %[kg/L]
+          fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]
+          CO2u_km_kg=fuelUse_km_kg*CO2Fuel; %[kg/km/kg]
+          CO2u=CO2u_km_kg*model.driveDistTotal*mass; %[kg]
+      end
+      % disposal phase
+      CO2d_kg=model.CO2Disp; %[kg/kg]
+      CO2d=CO2d_kg*mass; %[kg]
+      % end-of-life phase
+      CO2e_kg=model.CO2EoL; %[kg/kg]
+      CO2e=CO2e_kg*mass; %[kg]
+      % total
+      LCCO2=[CO2p CO2u CO2d CO2e]*1e-3;
+    end
+    
+    %%
+    function LCCost=computeLCCost(model)
+      mass=ecoOptimizeFuncs.computeMass(model);
+      % production phase
+      Costp_kg=model.Cost; %[SEK/kg]
+      Costp=Costp_kg*mass; %[SEK]
+      % use phase
+      usemodel='physicsbased';
+      switch usemodel
+        case 'simple'
+          %simple model based on fuel efficiency
+          Costu_km_kg=10.8/100*15/1400; %[SEK/km/kg]
+          Costu=Costu_km_kg*model.driveDistTotal*mass; %[J]
+        case 'physicsbased'
+          %more advanced model based on drive cycle energy
+          crr=0.01*0.85; %[-] %coefficient of effective rolling resistance
+          CR=11013; %[m] drive cycle rolling resistance constant
+          CA=1227; %[m^2/s^2] drive cycle acceleration constant
+          diffEff=0.42; %[-] differential efficiency (petrol)
+          Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
+          heatValueFuel=43.5*1e6*0.75; %[J/L]
+          fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]       
+          priceFuel=15; %[SEK/L]
+          Costu_km_kg=fuelUse_km_kg*priceFuel; %[SEK/km/kg]
+          Costu=Costu_km_kg*model.driveDistTotal*mass; %[SEK]  
+      end
+      % disposal phase
+      Costd=0; %[SEK]
+      % end-of-life phase
+      Coste=0; %[SEK]
+      % total
+      LCCost=[Costp Costu Costd Coste]*1e-3;
     end
     
     %%
@@ -127,7 +209,7 @@ classdef ecoOptimizeFuncs
             %     fval(2)=-v.d1(1,1);
           end
         otherwise
-          print('Computional method for constraints not defined')
+          disp('Computional method for constraints not defined')
       end
     end
     
@@ -143,7 +225,7 @@ classdef ecoOptimizeFuncs
       material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
       model=ecoOptimizeFuncs.updateMaterialProps(model,material);
       model=ecoOptimizeFuncs.updateDependentVars(model);
-      f0val = ecoOptimizeFuncs.computeLCE(model);
+      eval(['f0val = sum(ecoOptimizeFuncs.compute',model.objfunc,'(model));'])
       fval  = scale.*[ecoOptimizeFuncs.computeConstraints(model,1)'-fmax];
       if grads
         dx=1e-4;
@@ -154,7 +236,7 @@ classdef ecoOptimizeFuncs
           material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
           model=ecoOptimizeFuncs.updateMaterialProps(model,material);
           model=ecoOptimizeFuncs.updateDependentVars(model);
-          df0dx = [df0dx; (ecoOptimizeFuncs.computeLCE(model)-f0val)/dx];
+          eval(['df0dx = [df0dx; (sum(ecoOptimizeFuncs.compute',model.objfunc,'(model))-f0val)/dx];'])
           dfdx  = [dfdx, scale.*[ecoOptimizeFuncs.computeConstraints(model,1)'-(fval./scale+fmax)]/dx];
           eval(['model.',xnam{i},'=x(i);'])
           material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
