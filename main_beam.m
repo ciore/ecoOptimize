@@ -37,12 +37,11 @@ if restart
   material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
   model=ecoOptimizeFuncs.updateMaterialProps(model,material);
   model=ecoOptimizeFuncs.updateDependentVars(model);
-  figure(1), clf, subplot(1,2,1), ecoOptimizeFuncs.dispModel(model)
-
+  figure(1), clf, dispModel(model,0)
   
   %% set optimisation params
   xval=[model.B(1) model.B(2) model.B(3) model.H(1) model.H(2) model.H(3)]';
-  xnam={'B(1)' 'B(2)' 'B(3)' 'H(1)' 'H(2)' 'H(3)'};
+  xnam={'B(1)' 'B(2)' 'B(3)' 'H(1)' 'H(2)' 'H(3)'}';
   xmin=[0.05 0.005 0.05 0.005 0.005 0.005]';
   xmax=[0.2 0.2 0.2 0.2 0.2 0.2]';
   maxiter=20;
@@ -53,33 +52,26 @@ if restart
 end
 
 %% run GCMMA
-disp(['optimizing for: ',model.objfunc])
+disp(['Optimizing for: ',model.objfunc])
 figure(2)
 [gcmma,xval]=GCMMAFuncs.run(gcmma,xval,xnam,xmin,xmax,true);
 [f0val,fval]=ecoOptimizeFuncs.optFuncs(xval,xnam,false);
 
 %% view results
-figure(1), subplot(1,2,2), ecoOptimizeFuncs.dispModel(model)
 figure(2), clf, GCMMAFuncs.plotIter(gcmma)
+figure(1), dispModel(model,1)
 mass=ecoOptimizeFuncs.computeMass(model)
 LCE=ecoOptimizeFuncs.computeLCE(model)
 LCCO2=ecoOptimizeFuncs.computeLCCO2(model)
 LCCost=ecoOptimizeFuncs.computeLCCost(model)
 
-% %% check results
-% %% check constraints
-% beam=computeEulerBernoulli(model);
-% fval=max(abs(beam.w));
-% figure(3), clf, plot(beam.x,beam.w), xlabel('l [m]'), ylabel('w [m]')
-% comsol=runCOMSOLBeam(model);
-% v=mpheval(comsol,'v','edim',1,'dataset','dset1');
-% figure(3), clf, plot(beam.x,beam.w,v.p(1,:),v.d1,'*'), xlabel('x [m]'), xlabel('w [m]')
-
-
 %%
 function model=initModelBeam
   model.objfunc='LCE';
+  model.fmax=[1e-3];
+  model.fscale=[1e3];
   model.driveDistTotal=1e5;
+  model.solver='beamEBComsol';
   model.loadcase='simple_pt';
   model.P=-1e4;
   model.xP=0.5;
@@ -89,4 +81,23 @@ function model=initModelBeam
   model.H=[0.05 0.05 0.05];
   model.material={'Steel' 'Al-alloys' 'Steel'};
   model.alpha=[1 1 1];
+end
+
+%%
+function dispModel(model,fill)
+N=max([numel(model.B) numel(model.H)]);
+B=repmat(model.B,1,N-numel(model.B)+1);
+H=repmat(model.H,1,N-numel(model.H)+1);
+H0=([0 cumsum(H(1:end-1))]-sum(H)/2);
+B0=-B/2;
+C=colormap;
+for i=1:N
+  R=rectangle('Position',[B0(i) H0(i) B(i) H(i)]);
+  if fill
+    set(R,'Facecolor',C(50*(i-1)+1,:))
+  end
+end
+axis([B0(i)-B(i)/10 B0(i)+B(i)+B(i)/10 H0(i)-H(i)/10 H0(i)+H(i)+H(i)/10])
+axis auto, axis equal
+xlabel('b [m]'), ylabel('h [m]')
 end

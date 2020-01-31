@@ -64,7 +64,7 @@ classdef ecoOptimizeFuncs
           model.Ai=A;
           model.Ii=I;
           model.E=sum(model.Ei.*I)/sum(I);
-          model.nu=sum(model.nui.*A)/sum(A);!
+          model.nu=sum(model.nui.*A)/sum(A);
           model.rho=sum(model.rhoi.*A)/sum(A);
           model.A=sum(A);
           model.I=sum(I);
@@ -75,12 +75,28 @@ classdef ecoOptimizeFuncs
           model.CO2Disp=sum(model.CO2Dispi.*A)/sum(A);
           model.CO2EoL=sum(model.CO2EoLi.*A)/sum(A);
           model.Cost=sum(model.Costi.*A)/sum(A);
+        case 'circular'
+          I=pi*model.D.^4/64;
+          A=pi*model.D.^2/4;
+          model.L=sqrt((model.node(model.member(:,2),2)-model.node(model.member(:,1),2)).^2+(model.node(model.member(:,2),1)-model.node(model.member(:,1),1)).^2)';
+          model.E=model.Ei;
+          model.nu=model.nui;
+          model.rho=model.rhoi;
+          model.A=A;
+          model.I=I;
+          model.EProd=model.EProdi;
+          model.EDisp=model.EDispi;
+          model.EEoL=model.EEoLi;
+          model.CO2Prod=model.CO2Prodi;
+          model.CO2Disp=model.CO2Dispi;
+          model.CO2EoL=model.CO2EoLi;
+          model.Cost=model.Costi;
       end
     end
     
     %%
     function mass=computeMass(model)
-      mass=model.A*model.L*model.rho;
+      mass=model.A.*model.L.*model.rho;
     end
     
     %%
@@ -88,14 +104,14 @@ classdef ecoOptimizeFuncs
       mass=ecoOptimizeFuncs.computeMass(model);
       % production phase
       Ep_kg=model.EProd; %[J/kg]
-      Ep=Ep_kg*mass;
+      Ep=sum(Ep_kg.*mass);
       % use phase
       usemodel='physicsbased';
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
           Eu_km_kg=10.8/100*33.7e6/1400; %[J/km/kg]
-          Eu=Eu_km_kg*model.driveDistTotal*mass; %[J]
+          Eu=sum(Eu_km_kg.*model.driveDistTotal.*mass); %[J]
         case 'physicsbased'
           %more advanced model based on drive cycle energy (O'Reilly (2016))
           crr=0.01*0.85; %[-] %coefficient of effective rolling resistance
@@ -103,14 +119,14 @@ classdef ecoOptimizeFuncs
           CA=1227; %[m^2/s^2] drive cycle acceleration constant
           diffEff=0.42; %[-] differential efficiency (petrol)
           Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
-          Eu=Eu_km_kg*model.driveDistTotal*mass; %[J]
+          Eu=sum(Eu_km_kg.*model.driveDistTotal.*mass); %[J]
       end
       % disposal phase
       Ed_kg=model.EDisp; %[J/kg]
-      Ed=Ed_kg*mass; %[J]
+      Ed=sum(Ed_kg.*mass); %[J]
       % end-of-life phase
       Ee_kg=model.EEoL; %[J/kg]
-      Ee=Ee_kg*mass; %[J]
+      Ee=sum(Ee_kg.*mass); %[J]
       % total
       LCE=[Ep Eu Ed Ee]*1e-9;
     end
@@ -120,14 +136,14 @@ classdef ecoOptimizeFuncs
       mass=ecoOptimizeFuncs.computeMass(model);
       % production phase
       CO2p_kg=model.CO2Prod; %[kg/kg]
-      CO2p=CO2p_kg*mass; %[kg]
+      CO2p=sum(CO2p_kg.*mass); %[kg]
       % use phase
       usemodel='physicsbased';
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
           CO2u_km_kg=10.8/100*2.31/1400; %[kg/km/kg]
-          CO2u=CO2u_km_kg*model.driveDistTotal*mass; %[kg]
+          CO2u=sum(CO2u_km_kg.*model.driveDistTotal.*mass); %[kg]
         case 'physicsbased'
           %more advanced model based on drive cycle energy
           crr=0.01*0.85; %[-] %coefficient of effective rolling resistance
@@ -139,14 +155,14 @@ classdef ecoOptimizeFuncs
           CO2Fuel=2.31; %[kg/L]
           fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]
           CO2u_km_kg=fuelUse_km_kg*CO2Fuel; %[kg/km/kg]
-          CO2u=CO2u_km_kg*model.driveDistTotal*mass; %[kg]
+          CO2u=sum(CO2u_km_kg.*model.driveDistTotal.*mass); %[kg]
       end
       % disposal phase
       CO2d_kg=model.CO2Disp; %[kg/kg]
-      CO2d=CO2d_kg*mass; %[kg]
+      CO2d=sum(CO2d_kg.*mass); %[kg]
       % end-of-life phase
       CO2e_kg=model.CO2EoL; %[kg/kg]
-      CO2e=CO2e_kg*mass; %[kg]
+      CO2e=sum(CO2e_kg.*mass); %[kg]
       % total
       LCCO2=[CO2p CO2u CO2d CO2e]*1e-3;
     end
@@ -156,14 +172,14 @@ classdef ecoOptimizeFuncs
       mass=ecoOptimizeFuncs.computeMass(model);
       % production phase
       Costp_kg=model.Cost; %[SEK/kg]
-      Costp=Costp_kg*mass; %[SEK]
+      Costp=sum(Costp_kg.*mass); %[SEK]
       % use phase
       usemodel='physicsbased';
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
           Costu_km_kg=10.8/100*15/1400; %[SEK/km/kg]
-          Costu=Costu_km_kg*model.driveDistTotal*mass; %[J]
+          Costu=sum(Costu_km_kg.*model.driveDistTotal*mass); %[J]
         case 'physicsbased'
           %more advanced model based on drive cycle energy
           crr=0.01*0.85; %[-] %coefficient of effective rolling resistance
@@ -175,7 +191,7 @@ classdef ecoOptimizeFuncs
           fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]       
           priceFuel=15; %[SEK/L]
           Costu_km_kg=fuelUse_km_kg*priceFuel; %[SEK/km/kg]
-          Costu=Costu_km_kg*model.driveDistTotal*mass; %[SEK]  
+          Costu=sum(Costu_km_kg.*model.driveDistTotal.*mass); %[SEK]  
       end
       % disposal phase
       Costd=0; %[SEK]
@@ -186,28 +202,29 @@ classdef ecoOptimizeFuncs
     end
     
     %%
-    function fval=computeConstraints(model,update)
-      method='analytical';
+    function fval=computeConstraints(model)
+      method=model.solver;
       switch method
-        case 'analytical'
+        case 'beamEBAna'
           beam=computeEulerBernoulli(model);
           fval(1)=max(abs(beam.w));
-        case 'comsol'
-          if nargin<2
-            update=0;
-          end
+        case 'beamEBComsol'
+          global comsol
           if model.H<1e-6
             fval=1e20;
           else
-            if update
-              comsol=runCOMSOLBeam(model,1);
+            if isempty(comsol)
+              comsol=runCOMSOLBeam(model);
             else
-              comsol=runCOMSOLBeam(model,0);
+              comsol=runCOMSOLBeam(model,comsol);
             end
             fval(1)=max(abs(mpheval(comsol,'v','edim',1,'dataset','dset1','dataonly','on')));
             %     v=mpheval(comsol,'freq','edim',1,'dataset','dset2');
             %     fval(2)=-v.d1(1,1);
           end
+        case 'trussJVW'
+          delta=trussJVWFuncs.computeMVirtualWork(model,model.force);
+          fval(1)=max(max(abs(delta)));
         otherwise
           disp('Computional method for constraints not defined')
       end
@@ -217,8 +234,8 @@ classdef ecoOptimizeFuncs
     function [f0val,fval,df0dx,dfdx] = optFuncs(x,xnam,grads)
       %  This calculates function values and gradients
       global model material materialsData
-      fmax=[1e-3]';% -60]';
-      scale=[1e3]';% 1]';
+      fmax=model.fmax;
+      fscale=model.fscale;
       for i=1:numel(x)
         eval(['model.',xnam{i},'=x(i);'])
       end
@@ -226,7 +243,7 @@ classdef ecoOptimizeFuncs
       model=ecoOptimizeFuncs.updateMaterialProps(model,material);
       model=ecoOptimizeFuncs.updateDependentVars(model);
       eval(['f0val = sum(ecoOptimizeFuncs.compute',model.objfunc,'(model));'])
-      fval  = scale.*[ecoOptimizeFuncs.computeConstraints(model,1)'-fmax];
+      fval  = fscale.*[ecoOptimizeFuncs.computeConstraints(model)'-fmax];
       if grads
         dx=1e-4;
         df0dx=[];
@@ -237,30 +254,13 @@ classdef ecoOptimizeFuncs
           model=ecoOptimizeFuncs.updateMaterialProps(model,material);
           model=ecoOptimizeFuncs.updateDependentVars(model);
           eval(['df0dx = [df0dx; (sum(ecoOptimizeFuncs.compute',model.objfunc,'(model))-f0val)/dx];'])
-          dfdx  = [dfdx, scale.*[ecoOptimizeFuncs.computeConstraints(model,1)'-(fval./scale+fmax)]/dx];
+          dfdx  = [dfdx, fscale.*[ecoOptimizeFuncs.computeConstraints(model)'-(fval./fscale+fmax)]/dx];
           eval(['model.',xnam{i},'=x(i);'])
           material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
           model=ecoOptimizeFuncs.updateMaterialProps(model,material);
           model=ecoOptimizeFuncs.updateDependentVars(model);
         end
       end
-    end
-    
-    %%
-    function dispModel(model)
-      N=max([numel(model.B) numel(model.H)]);
-      B=repmat(model.B,1,N-numel(model.B)+1);
-      H=repmat(model.H,1,N-numel(model.H)+1);
-      H0=([0 cumsum(H(1:end-1))]-sum(H)/2);
-      B0=-B/2;
-      C=colormap;
-      for i=1:N
-        R=rectangle('Position',[B0(i) H0(i) B(i) H(i)]);
-        set(R,'Facecolor',C(50*(i-1)+1,:))
-      end
-      axis([B0(i)-B(i)/10 B0(i)+B(i)+B(i)/10 H0(i)-H(i)/10 H0(i)+H(i)+H(i)/10])
-      axis auto, axis equal
-      xlabel('b [m]'), ylabel('h [m]')
     end
     
   end
