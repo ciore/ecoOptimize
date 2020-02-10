@@ -20,9 +20,9 @@ classdef GCMMAFuncs
   methods(Static)
     
     %%
-    function gcmma = init(xval,xnam,xmin,xmax,maxiter)
+    function gcmma = init(optfuncs,xval,xnam,xmin,xmax)
       % This sets up the GCMMA parameters and starting points
-      [f0val,fval,df0dx,dfdx] = ecoOptimizeFuncs.optFuncs(xval,xnam,true);
+      [f0val,fval,df0dx,dfdx] = optfuncs(xval,xnam,true);
       m=size(fval,1);
       n=size(xval,1);
       epsimin = 0.0000001;
@@ -41,23 +41,21 @@ classdef GCMMAFuncs
       kkttol  = 0;
       innerit = 0;
       outeriter = 0;
-      maxoutit  = maxiter;
+      maxoutit  = 1;
+      displive  = 0;
+      plotlive  = 0;
       iout = [outeriter innerit];
       xout = [xval'];
       fout = [f0val];
       cout = [fval'];
       for name=who'
-        if not(ismember(name,{'xval','xnam','xmin','xmax'}))
-          eval(['gcmma.',name{:},'=',name{:},';'])
-        end
+        eval(['gcmma.',name{:},'=',name{:},';'])
       end
     end
     
     %%
-    function [gcmma,xval] = run(gcmma,xval,xnam,xmin,xmax,plotlive)
+    function [gcmma,xval] = run(gcmma)
       % This is a slightly modified version of GCMMA-MMA-code-1.5/gctoymain.m
-      %
-      addpath('../GCMMA-MMA-code-1.5')
       %
       names=fieldnames(gcmma);
       for i=1:numel(names)
@@ -68,7 +66,7 @@ classdef GCMMAFuncs
       %%%% and gradients of the objective- and constraint functions at xval.
       %%%% The results should be put in f0val, df0dx, fval and dfdx:
       if outeriter < 0.5
-        [f0val,fval,df0dx,dfdx] = ecoOptimizeFuncs.optFuncs(xval,xnam,true);
+        [f0val,fval,df0dx,dfdx] = optfuncs(xval,xnam,true);
         innerit=0;
         iout = [outeriter innerit];
         xout = [xval'];
@@ -94,7 +92,7 @@ classdef GCMMAFuncs
         %%%% of the objective- and constraint functions at the point xmma
         %%%% ( = the optimal solution of the subproblem).
         %%%% The results should be put in f0valnew and fvalnew.
-        [f0valnew,fvalnew] = ecoOptimizeFuncs.optFuncs(xmma,xnam,false);
+        [f0valnew,fvalnew] = optfuncs(xmma,xnam,false);
         %%%% It is checked if the approximations are conservative:
         [conserv] = concheck(m,epsimin,f0app,f0valnew,fapp,fvalnew);
         %%%% While the approximations are non-conservative (conserv=0),
@@ -115,7 +113,7 @@ classdef GCMMAFuncs
             %%%% of the objective- and constraint functions at the point xmma
             %%%% ( = the optimal solution of the subproblem).
             %%%% The results should be put in f0valnew and fvalnew:
-            [f0valnew,fvalnew] = ecoOptimizeFuncs.optFuncs(xmma,xnam,false);
+            [f0valnew,fvalnew] = optfuncs(xmma,xnam,false);
             %%%% It is checked if the approximations have become conservative:
             [conserv] = concheck(m,epsimin,f0app,f0valnew,fapp,fvalnew);
           end
@@ -127,7 +125,7 @@ classdef GCMMAFuncs
         %%%% The user should now calculate function values and gradients
         %%%% of the objective- and constraint functions at xval.
         %%%% The results should be put in f0val, df0dx, fval and dfdx:
-        [f0val,fval,df0dx,dfdx] = ecoOptimizeFuncs.optFuncs(xval,xnam,true);
+        [f0val,fval,df0dx,dfdx] = optfuncs(xval,xnam,true);
         %%%% The residual vector of the KKT conditions is calculated:
         [residu,kktnorm,residumax] = ...
           kktcheck(m,n,xmma,ymma,zmma,lam,xsi,eta,mu,zet,s, ...
@@ -139,7 +137,9 @@ classdef GCMMAFuncs
         for i=1:numel(names)
           eval(['gcmma.',names{i},'=',names{i},';'])
         end
-        GCMMAFuncs.dispIter(gcmma)
+        if displive
+          GCMMAFuncs.dispIter(gcmma)
+        end
         if plotlive
           GCMMAFuncs.plotIter(gcmma),drawnow
         end
@@ -153,19 +153,19 @@ classdef GCMMAFuncs
       xlabel('iter'),ylabel('f0val')
       subplot(3,2,2)
       semilogy(gcmma.iout(2:end,1),abs(gcmma.fout(2:end,:)-gcmma.fout(1:end-1,:))./abs(gcmma.fout(1,:)))
-      xlabel('iter'),ylabel('df0val/di')
+      xlabel('iter'),ylabel('d(f0val)/di')
       subplot(3,2,3)
       plot(gcmma.iout(:,1),gcmma.xout)
       xlabel('iter'),ylabel('xval')
       subplot(3,2,4)
       semilogy(gcmma.iout(2:end,1),abs(gcmma.xout(2:end,:)-gcmma.xout(1:end-1,:))./abs(gcmma.xout(1,:)))
-      xlabel('iter'),ylabel('dxval/di')
+      xlabel('iter'),ylabel('d(xval)/di')
       subplot(3,2,5)
       plot(gcmma.iout(:,1),gcmma.cout)
-      xlabel('outit'),ylabel('fval')
+      xlabel('outit'),ylabel('fval-fmax')
       subplot(3,2,6)
       semilogy(gcmma.iout(2:end,1),abs(gcmma.cout(2:end,:)-gcmma.cout(1:end-1,:))./abs(gcmma.cout(1,:)))
-      xlabel('iter'),ylabel('dfval/di')
+      xlabel('iter'),ylabel('d(fval-fmax)/di')
     end
     
     %%

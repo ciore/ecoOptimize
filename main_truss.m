@@ -25,6 +25,7 @@ if restart
   clear all
   clear global
   addpath('.') %path to material database
+  addpath('../GCMMA-MMA-code-1.5') %path to GCMMA MATLAB functions
   addpath('../trussJVW') %path to constraint solver
   
   %% select a material
@@ -32,10 +33,9 @@ if restart
   materialsData=importdata('materialData.mat');
   
   %% initiate model of the panel
-  global model material
+  global model
   model=initModelTruss;
-  material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
-  model=ecoOptimizeFuncs.updateMaterialProps(model,material);
+  model=ecoOptimizeFuncs.blendMaterials(model,materialsData);
   model=ecoOptimizeFuncs.updateDependentVars(model);
   figure(1), clf, hold on, axis equal, trussJVWFuncs.plotModel(model)
   
@@ -54,14 +54,16 @@ if restart
   maxiter=30;
   
   %% initiate GCMMA
-  gcmma=GCMMAFuncs.init(xval,xnam,xmin,xmax,maxiter);
+  gcmma=GCMMAFuncs.init(@ecoOptimizeFuncs.optFuncs,xval,xnam,xmin,xmax);
 
 end
 
 %% run GCMMA
-figure(2)
 disp(['Optimizing for: ',model.objfunc])
-[gcmma,xval]=GCMMAFuncs.run(gcmma,xval,xnam,xmin,xmax,true);
+gcmma.displive=1;
+figure(2), clf, gcmma.plotlive=1;
+gcmma.maxoutit=30;
+[gcmma,xval]=GCMMAFuncs.run(gcmma);
 [f0val,fval]=ecoOptimizeFuncs.optFuncs(xval,xnam,false);
 
 %% plot results
@@ -76,9 +78,9 @@ LCCost=ecoOptimizeFuncs.computeLCCost(model)
 
 
 
-%%
 %% FUNCTIONS
 
+%%
 function model=initModelTruss
   model.objfunc='Mass';
   model.fmax=[1e-2];

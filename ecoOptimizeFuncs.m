@@ -20,7 +20,7 @@ classdef ecoOptimizeFuncs
   methods(Static)
     
     %%
-    function material=blendMaterials(model,materialsData)
+    function model=blendMaterials(model,materialsData)
       N=max(sum(not(cellfun(@isempty,model.material)),1));
       if N>1
         model.alpha(N,:)=1-sum(model.alpha(1:N-1,:),1);
@@ -36,10 +36,6 @@ classdef ecoOptimizeFuncs
         end
         eval(['material.',fnames{j},'=sum(material.',fnames{j},'.*model.alpha,1);'])
       end
-    end
-
-    %% 
-    function model=updateMaterialProps(model,material)
       model.Ei=material.youngsModulus;
       model.nui=material.poissonsRatio;
       model.rhoi=material.density;
@@ -54,7 +50,7 @@ classdef ecoOptimizeFuncs
     
     %%
     function model=updateDependentVars(model)
-    % this functions must be update for different model paramaterizations
+    % this functions must be updated for different model paramaterizations
       switch model.xsection
         case 'layered'
           I0=model.B.*model.H.^3/12;
@@ -233,14 +229,13 @@ classdef ecoOptimizeFuncs
     %%
     function [f0val,fval,df0dx,dfdx] = optFuncs(x,xnam,grads)
       %  This calculates function values and gradients
-      global model material materialsData
+      global model materialsData
       fmax=model.fmax;
       fscale=model.fscale;
       for i=1:numel(x)
         eval(['model.',xnam{i},'=x(i);'])
       end
-      material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
-      model=ecoOptimizeFuncs.updateMaterialProps(model,material);
+      model=ecoOptimizeFuncs.blendMaterials(model,materialsData);
       model=ecoOptimizeFuncs.updateDependentVars(model);
       eval(['f0val = sum(ecoOptimizeFuncs.compute',model.objfunc,'(model));'])
       fval  = fscale.*[ecoOptimizeFuncs.computeConstraints(model)'-fmax];
@@ -249,16 +244,12 @@ classdef ecoOptimizeFuncs
         df0dx=[];
         dfdx=[];
         for i=1:numel(x)
-          eval(['model.',xnam{i},'=x(i)+dx;'])
-          material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
-          model=ecoOptimizeFuncs.updateMaterialProps(model,material);
-          model=ecoOptimizeFuncs.updateDependentVars(model);
-          eval(['df0dx = [df0dx; (sum(ecoOptimizeFuncs.compute',model.objfunc,'(model))-f0val)/dx];'])
-          dfdx  = [dfdx, fscale.*[ecoOptimizeFuncs.computeConstraints(model)'-(fval./fscale+fmax)]/dx];
-          eval(['model.',xnam{i},'=x(i);'])
-          material=ecoOptimizeFuncs.blendMaterials(model,materialsData);
-          model=ecoOptimizeFuncs.updateMaterialProps(model,material);
-          model=ecoOptimizeFuncs.updateDependentVars(model);
+          modeldx=model;
+          eval(['modeldx.',xnam{i},'=x(i)+dx;'])
+          modeldx=ecoOptimizeFuncs.blendMaterials(modeldx,materialsData);
+          modeldx=ecoOptimizeFuncs.updateDependentVars(modeldx);
+          eval(['df0dx = [df0dx; (sum(ecoOptimizeFuncs.compute',modeldx.objfunc,'(modeldx))-f0val)/dx];'])
+          dfdx  = [dfdx, fscale.*[ecoOptimizeFuncs.computeConstraints(modeldx)'-(fval./fscale+fmax)]/dx];
         end
       end
     end

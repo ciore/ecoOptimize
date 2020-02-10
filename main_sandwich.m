@@ -25,6 +25,7 @@ if restart
   clear all
   clear global
   addpath('.') %path to material database [you could pick a different material database]
+  addpath('../GCMMA-MMA-code-1.5') %path to GCMMA MATLAB functions
   addpath('../beamEB') %path to constraint solver [you could add a different solver]
   
   %% load material database
@@ -32,10 +33,9 @@ if restart
   materialsData=importdata('materialData.mat');
   
   %% initiate model of the panel
-  global model material
+  global model
   model=initModelSandwich; %define the model in function
-  material=ecoOptimizeFuncs.blendMaterials(model,materialsData); %blend materials from database according to alpha
-  model=ecoOptimizeFuncs.updateMaterialProps(model,material); %map blended material into model
+  model=ecoOptimizeFuncs.blendMaterials(model,materialsData); %blend materials from database according to alpha
   model=ecoOptimizeFuncs.updateDependentVars(model);
   figure(1), clf, dispModel(model,0)
   
@@ -44,17 +44,18 @@ if restart
   xnam={'H(1)' 'H(2)' 'H(3)' 'alpha(1,1)' 'alpha(1,2)' 'alpha(1,3)'}';
   xmin=[0.001 0.001 0.001 0 0 0]';
   xmax=[0.2 0.2 0.2 1 1 1]';
-  maxiter=30;
   
   %% initiate GCMMA
-  gcmma=GCMMAFuncs.init(xval,xnam,xmin,xmax,maxiter);
+  gcmma=GCMMAFuncs.init(@ecoOptimizeFuncs.optFuncs,xval,xnam,xmin,xmax);
 
 end
 
 %% run GCMMA
 disp(['Optimizing for: ',model.objfunc])
-figure(2)
-[gcmma,xval]=GCMMAFuncs.run(gcmma,xval,xnam,xmin,xmax,true);
+gcmma.displive=1;
+% figure(2), clf, gcmma.plotlive=1;
+gcmma.maxoutit=30;
+[gcmma,xval]=GCMMAFuncs.run(gcmma);
 [f0val,fval]=ecoOptimizeFuncs.optFuncs(xval,xnam,false);
 
 %% view results
