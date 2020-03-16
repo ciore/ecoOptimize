@@ -84,7 +84,6 @@ LCCost=ecoOptimizeFuncs.computeLCCost(model)
 function model=initModelTruss
   model.objfunc='Mass';
   model.fmax=[1e-2];
-  model.fscale=[1e2];
   model.driveDistTotal=1e5;
   model.solver='trussJVW';
   model.node=[0 0; 1 0; 0.25 -0.05; 0.5 -0.05; 0.75 -0.05; 0.25 0; 0.5 0; 0.75 0]; %size nx2

@@ -43,7 +43,7 @@ classdef ecoOptimizeFuncs
       model.EDispi=material.disposalEnergy;
       model.EEoLi=material.eolEnergy;
       model.CO2Prodi=material.productionCO2;
-      model.CO2Dispi=material.diposalCO2;
+      model.CO2Dispi=material.disposalCO2;
       model.CO2EoLi=material.eolCO2;
       model.Costi=material.price;
     end
@@ -102,11 +102,11 @@ classdef ecoOptimizeFuncs
       Ep_kg=model.EProd; %[J/kg]
       Ep=sum(Ep_kg.*mass);
       % use phase
-      usemodel='physicsbased';
+      usemodel='simple';
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
-          Eu_km_kg=10.8/100*33.7e6/1400; %[J/km/kg]
+          Eu_km_kg=11.5/100*33.7e6/1500; %[J/km/kg]
           Eu=sum(Eu_km_kg.*model.driveDistTotal.*mass); %[J]
         case 'physicsbased'
           %more advanced model based on drive cycle energy (O'Reilly (2016))
@@ -134,11 +134,11 @@ classdef ecoOptimizeFuncs
       CO2p_kg=model.CO2Prod; %[kg/kg]
       CO2p=sum(CO2p_kg.*mass); %[kg]
       % use phase
-      usemodel='physicsbased';
+      usemodel='simple';
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
-          CO2u_km_kg=10.8/100*2.31/1400; %[kg/km/kg]
+          CO2u_km_kg=11.5/100*2.31/1500; %[kg/km/kg]
           CO2u=sum(CO2u_km_kg.*model.driveDistTotal.*mass); %[kg]
         case 'physicsbased'
           %more advanced model based on drive cycle energy
@@ -170,11 +170,11 @@ classdef ecoOptimizeFuncs
       Costp_kg=model.Cost; %[SEK/kg]
       Costp=sum(Costp_kg.*mass); %[SEK]
       % use phase
-      usemodel='physicsbased';
+      usemodel='simple';
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
-          Costu_km_kg=10.8/100*15/1400; %[SEK/km/kg]
+          Costu_km_kg=11.5/100*15/1500; %[SEK/km/kg]
           Costu=sum(Costu_km_kg.*model.driveDistTotal*mass); %[J]
         case 'physicsbased'
           %more advanced model based on drive cycle energy
@@ -231,14 +231,13 @@ classdef ecoOptimizeFuncs
       %  This calculates function values and gradients
       global model materialsData
       fmax=model.fmax;
-      fscale=model.fscale;
       for i=1:numel(x)
         eval(['model.',xnam{i},'=x(i);'])
       end
       model=ecoOptimizeFuncs.blendMaterials(model,materialsData);
       model=ecoOptimizeFuncs.updateDependentVars(model);
       eval(['f0val = sum(ecoOptimizeFuncs.compute',model.objfunc,'(model));'])
-      fval  = fscale.*[ecoOptimizeFuncs.computeConstraints(model)'-fmax];
+      fval  = [ecoOptimizeFuncs.computeConstraints(model)'./fmax-1];
       if grads
         dx=1e-4;
         df0dx=[];
@@ -249,9 +248,34 @@ classdef ecoOptimizeFuncs
           modeldx=ecoOptimizeFuncs.blendMaterials(modeldx,materialsData);
           modeldx=ecoOptimizeFuncs.updateDependentVars(modeldx);
           eval(['df0dx = [df0dx; (sum(ecoOptimizeFuncs.compute',modeldx.objfunc,'(modeldx))-f0val)/dx];'])
-          dfdx  = [dfdx, fscale.*[ecoOptimizeFuncs.computeConstraints(modeldx)'-(fval./fscale+fmax)]/dx];
+          dfdx  = [dfdx, [ecoOptimizeFuncs.computeConstraints(modeldx)'./fmax-(fval+1)]/dx];
         end
       end
+    end
+    
+    %%
+    function bargraph(result)
+      if result.showtotal
+        result.values=[result.values;sum([result.values],1)];
+        result.xlabel=[result.xlabel,{'Total'}];
+        bar(result.values,'grouped')
+        a=axis;
+        hold on
+        plot(repmat(size(result.values,1)-0.5,1,2),[a(3) a(4)]*10,'-k')
+        axis(a)
+        hold off
+      elseif size(result.values,1)==1&size(result.values,2)>1
+        bar([result.values;result.values],'grouped')
+        a=axis;
+        a(2)=a(2)-1;
+        axis(a)
+      else
+        bar(result.values,'grouped')
+      end
+      legend(result.legend','location','bestoutside')
+      title(result.title)
+      set(gca,'xticklabel',result.xlabel)
+      ylabel(result.ylabel)
     end
     
   end

@@ -78,7 +78,6 @@ LCCost=ecoOptimizeFuncs.computeLCCost(model)
 function model=initModelBeam
   model.objfunc='LCE';
   model.fmax=[1e-3];
-  model.fscale=[1e3];
   model.driveDistTotal=1e5;
   model.solver='beamEBAna';
   model.loadcase='simple_pt';

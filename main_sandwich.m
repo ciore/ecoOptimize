@@ -42,7 +42,7 @@ if restart
   %% set optimisation params
   xval=[model.H(1) model.H(2) model.H(3) model.alpha(1,1) model.alpha(1,2) model.alpha(1,3)]';
   xnam={'H(1)' 'H(2)' 'H(3)' 'alpha(1,1)' 'alpha(1,2)' 'alpha(1,3)'}';
-  xmin=[0.001 0.001 0.001 0 0 0]';
+  xmin=[0.0001 0.001 0.0001 0 0 0]';
   xmax=[0.2 0.2 0.2 1 1 1]';
   
   %% initiate GCMMA
@@ -54,9 +54,11 @@ end
 disp(['Optimizing for: ',model.objfunc])
 gcmma.displive=1;
 % figure(2), clf, gcmma.plotlive=1;
-gcmma.maxoutit=30;
+gcmma.maxoutit=50;
 [gcmma,xval]=GCMMAFuncs.run(gcmma);
 [f0val,fval]=ecoOptimizeFuncs.optFuncs(xval,xnam,false);
+h=xval(1:3)
+alpha=xval(4:6)
 
 %% view results
 figure(2), clf, GCMMAFuncs.plotIter(gcmma)
@@ -67,25 +69,23 @@ LCCO2=ecoOptimizeFuncs.computeLCCO2(model)
 LCCost=ecoOptimizeFuncs.computeLCCost(model)
 
 
-
 %% FUNCTIONS
 
 %%
 function model=initModelSandwich
   model.objfunc='LCE';
-  model.fmax=[1e-3];
-  model.fscale=[1e3];
+  model.fmax=[5e-3];
   model.driveDistTotal=1e5;
   model.solver='beamEBAna';
   model.loadcase='simple_pt';
   model.P=-1e4;
-  model.xP=1;
-  model.L=2;
+  model.xP=0.5;
+  model.L=1;
   model.xsection='layered';
   model.B=1;
   model.H=[0.05 0.05 0.05];
   model.material={'GFRP' 'PUR' 'GFRP';'CFRP' 'PVC' 'CFRP'};
-  model.alpha=[0.3 0.4 0.5];
+  model.alpha=[0.4 0.4 0.4];
 end
 
 %%
