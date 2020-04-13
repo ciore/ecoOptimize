@@ -27,6 +27,7 @@ if restart
   addpath('.') %path to material database [you could pick a different material database]
   addpath('../GCMMA-MMA-code-1.5') %path to GCMMA MATLAB functions
   addpath('../beamEB') %path to constraint solver [you could add a different solver]
+  import ecoOptimize.*
   
   %% load material database
   global materialsData
@@ -35,8 +36,8 @@ if restart
   %% initiate model of the panel
   global model
   model=initModelBeam;
-  model=ecoOptimizeFuncs.blendMaterials(model,materialsData);
-  model=ecoOptimizeFuncs.updateDependentVars(model);
+  model=blendMaterials(model,materialsData);
+  model=updateDependentVars(model);
   figure(1), clf, dispModel(model,0)
   
   %% set optimisation params
@@ -47,7 +48,7 @@ if restart
   maxiter=20;
   
   %% initiate GCMMA
-  gcmma=GCMMAFuncs.init(@ecoOptimizeFuncs.optFuncs,xval,xnam,xmin,xmax);
+  gcmma=GCMMA.init(@ecoOptimize.optFuncs,xval,xnam,xmin,xmax);
 
 end
 
@@ -56,16 +57,16 @@ disp(['Optimizing for: ',model.objfunc])
 gcmma.displive=1;
 % figure(2), clf, gcmma.plotlive=1;
 gcmma.maxoutit=20;
-[gcmma,xval]=GCMMAFuncs.run(gcmma);
-[f0val,fval]=ecoOptimizeFuncs.optFuncs(xval,xnam,false);
+[gcmma,xval]=GCMMA.run(gcmma);
+[f0val,fval]=optFuncs(xval,xnam,false);
 
 %% view results
-figure(2), clf, GCMMAFuncs.plotIter(gcmma)
+figure(2), clf, GCMMA.plotIter(gcmma)
 figure(1), dispModel(model,1)
-mass=ecoOptimizeFuncs.computeMass(model)
-LCE=ecoOptimizeFuncs.computeLCE(model)
-LCCO2=ecoOptimizeFuncs.computeLCCO2(model)
-LCCost=ecoOptimizeFuncs.computeLCCost(model)
+mass=computeMass(model)
+LCE=computeLCE(model)
+LCCO2=computeLCCO2(model)
+LCCost=computeLCCost(model)
 
 
 

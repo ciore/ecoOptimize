@@ -16,7 +16,7 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-classdef ecoOptimizeFuncs
+classdef ecoOptimize
   methods(Static)
     
     %%
@@ -97,7 +97,7 @@ classdef ecoOptimizeFuncs
     
     %%
     function LCE=computeLCE(model)
-      mass=ecoOptimizeFuncs.computeMass(model);
+      mass=ecoOptimize.computeMass(model);
       % production phase
       Ep_kg=model.EProd; %[J/kg]
       Ep=sum(Ep_kg.*mass);
@@ -129,7 +129,7 @@ classdef ecoOptimizeFuncs
     
     %%
     function LCCO2=computeLCCO2(model)
-      mass=ecoOptimizeFuncs.computeMass(model);
+      mass=ecoOptimize.computeMass(model);
       % production phase
       CO2p_kg=model.CO2Prod; %[kg/kg]
       CO2p=sum(CO2p_kg.*mass); %[kg]
@@ -165,7 +165,7 @@ classdef ecoOptimizeFuncs
     
     %%
     function LCCost=computeLCCost(model)
-      mass=ecoOptimizeFuncs.computeMass(model);
+      mass=ecoOptimize.computeMass(model);
       % production phase
       Costp_kg=model.Cost; %[SEK/kg]
       Costp=sum(Costp_kg.*mass); %[SEK]
@@ -234,10 +234,10 @@ classdef ecoOptimizeFuncs
       for i=1:numel(x)
         eval(['model.',xnam{i},'=x(i);'])
       end
-      model=ecoOptimizeFuncs.blendMaterials(model,materialsData);
-      model=ecoOptimizeFuncs.updateDependentVars(model);
-      eval(['f0val = sum(ecoOptimizeFuncs.compute',model.objfunc,'(model));'])
-      fval  = [ecoOptimizeFuncs.computeConstraints(model)'./fmax-1];
+      model=ecoOptimize.blendMaterials(model,materialsData);
+      model=ecoOptimize.updateDependentVars(model);
+      eval(['f0val = sum(ecoOptimize.compute',model.objfunc,'(model));'])
+      fval  = [ecoOptimize.computeConstraints(model)'./fmax-1];
       if grads
         dx=1e-4;
         df0dx=[];
@@ -245,10 +245,10 @@ classdef ecoOptimizeFuncs
         for i=1:numel(x)
           modeldx=model;
           eval(['modeldx.',xnam{i},'=x(i)+dx;'])
-          modeldx=ecoOptimizeFuncs.blendMaterials(modeldx,materialsData);
-          modeldx=ecoOptimizeFuncs.updateDependentVars(modeldx);
-          eval(['df0dx = [df0dx; (sum(ecoOptimizeFuncs.compute',modeldx.objfunc,'(modeldx))-f0val)/dx];'])
-          dfdx  = [dfdx, [ecoOptimizeFuncs.computeConstraints(modeldx)'./fmax-(fval+1)]/dx];
+          modeldx=ecoOptimize.blendMaterials(modeldx,materialsData);
+          modeldx=ecoOptimize.updateDependentVars(modeldx);
+          eval(['df0dx = [df0dx; (sum(ecoOptimize.compute',modeldx.objfunc,'(modeldx))-f0val)/dx];'])
+          dfdx  = [dfdx, [ecoOptimize.computeConstraints(modeldx)'./fmax-(fval+1)]/dx];
         end
       end
     end

@@ -16,7 +16,7 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-classdef GCMMAFuncs
+classdef GCMMA
   methods(Static)
     
     %%
@@ -138,10 +138,10 @@ classdef GCMMAFuncs
           eval(['gcmma.',names{i},'=',names{i},';'])
         end
         if displive
-          GCMMAFuncs.dispIter(gcmma)
+          GCMMA.dispIter(gcmma)
         end
         if plotlive
-          GCMMAFuncs.plotIter(gcmma),drawnow
+          GCMMA.plotIter(gcmma),drawnow
         end
       end
     end

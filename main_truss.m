@@ -27,6 +27,7 @@ if restart
   addpath('.') %path to material database
   addpath('../GCMMA-MMA-code-1.5') %path to GCMMA MATLAB functions
   addpath('../trussJVW') %path to constraint solver
+  import ecoOptimize.*
   
   %% select a material
   global materialsData
@@ -35,8 +36,8 @@ if restart
   %% initiate model of the panel
   global model
   model=initModelTruss;
-  model=ecoOptimizeFuncs.blendMaterials(model,materialsData);
-  model=ecoOptimizeFuncs.updateDependentVars(model);
+  model=blendMaterials(model,materialsData);
+  model=updateDependentVars(model);
   figure(1), clf, hold on, axis equal, trussJVWFuncs.plotModel(model)
   
   %% solve for forces
@@ -54,7 +55,7 @@ if restart
   maxiter=30;
   
   %% initiate GCMMA
-  gcmma=GCMMAFuncs.init(@ecoOptimizeFuncs.optFuncs,xval,xnam,xmin,xmax);
+  gcmma=GCMMA.init(@ecoOptimize.optFuncs,xval,xnam,xmin,xmax);
 
 end
 
@@ -63,18 +64,18 @@ disp(['Optimizing for: ',model.objfunc])
 gcmma.displive=1;
 figure(2), clf, gcmma.plotlive=1;
 gcmma.maxoutit=30;
-[gcmma,xval]=GCMMAFuncs.run(gcmma);
-[f0val,fval]=ecoOptimizeFuncs.optFuncs(xval,xnam,false);
+[gcmma,xval]=GCMMA.run(gcmma);
+[f0val,fval]=optFuncs(xval,xnam,false);
 
 %% plot results
-figure(2), clf, GCMMAFuncs.plotIter(gcmma)
+figure(2), clf, GCMMA.plotIter(gcmma)
 delta=trussJVWFuncs.computeMVirtualWork(model,force);
 figure(1), trussJVWFuncs.plotDelta(model,delta)
 trussJVWFuncs.displayDelta(delta)
-mass=sum(ecoOptimizeFuncs.computeMass(model))
-LCE=ecoOptimizeFuncs.computeLCE(model)
-LCCO2=ecoOptimizeFuncs.computeLCCO2(model)
-LCCost=ecoOptimizeFuncs.computeLCCost(model)
+mass=sum(computeMass(model))
+LCE=computeLCE(model)
+LCCO2=computeLCCO2(model)
+LCCost=computeLCCost(model)
 
 
 
