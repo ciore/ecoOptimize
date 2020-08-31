@@ -74,7 +74,7 @@ LCCost=computeLCCost(model)
 
 %%
 function model=initModelSandwich
-  model.objfunc='LCE';
+  model.objfunc='Mass';
   model.fmax=[5e-3];
   model.driveDistTotal=100e3;
   model.solver='beamEBAna';
@@ -97,6 +97,7 @@ H=repmat(model.H,1,N-numel(model.H)+1);
 H0=([0 cumsum(H(1:end-1))]-sum(H)/2);
 B0=-B/2;
 C=colormap;
+figure()
 for i=1:N
   R=rectangle('Position',[B0(i) H0(i) B(i) H(i)]);
   if fill

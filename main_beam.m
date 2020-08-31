@@ -25,8 +25,8 @@ if restart
   clear all
   clear global
   addpath('.') %path to material database [you could pick a different material database]
-  addpath('../GCMMA-MMA-code-1.5') %path to GCMMA MATLAB functions
-  addpath('../beamEB') %path to constraint solver [you could add a different solver]
+  addpath('/Users/robertkth/Documents/GitHub/GCMMA-MMA-code-1.5') %path to GCMMA MATLAB functions
+  addpath('/Users/robertkth/Documents/GitHub/beamEB') %path to constraint solver [you could add a different solver]
   import ecoOptimize.*
   
   %% load material database
@@ -55,7 +55,7 @@ end
 %% run GCMMA
 disp(['Optimizing for: ',model.objfunc])
 gcmma.displive=1;
-% figure(2), clf, gcmma.plotlive=1;
+%figure(2), clf, gcmma.plotlive=1;
 gcmma.maxoutit=20;
 [gcmma,xval]=GCMMA.run(gcmma);
 [f0val,fval]=optFuncs(xval,xnam,false);
@@ -67,10 +67,6 @@ mass=computeMass(model)
 LCE=computeLCE(model)
 LCCO2=computeLCCO2(model)
 LCCost=computeLCCost(model)
-
-
-
-
 
 
 %% FUNCTIONS
@@ -91,6 +87,8 @@ function model=initModelBeam
   model.material={'Steel' 'Al-alloys' 'Steel'};
   model.alpha=[1 1 1];
 end
+
+
 
 %%
 function dispModel(model,fill)

@@ -25,8 +25,8 @@ if restart
   clear all
   clear global
   addpath('.') %path to material database
-  addpath('../GCMMA-MMA-code-1.5') %path to GCMMA MATLAB functions
-  addpath('../trussJVW') %path to constraint solver
+  addpath('/Users/robertkth/Documents/GitHub/GCMMA-MMA-code-1.5') %path to GCMMA MATLAB functions
+  addpath('/Users/robertkth/Documents/GitHub//trussJVW') %path to constraint solver
   import ecoOptimize.*
   
   %% select a material

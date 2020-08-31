@@ -30,7 +30,7 @@ materialsData=importdata('materialData.mat');
 
 %% iterate material alternatives
 i=0;
-for m=[1 4]
+for m=[1:9]
   i=i+1;
   
   %% initiate model of the panel
@@ -42,7 +42,7 @@ for m=[1 4]
   
   %% determine height to fit constraint and the resulting mass
   model=computeOptimalVariable(model);
-  h(i)=model.H;
+  h(i)=sum(model.H(:));
   mass(i)=computeMass(model);
   
   %% compute LCE and LCCO2
@@ -66,11 +66,6 @@ subplot(2,1,2)
 bargraph(struct('title','CO_2','xlabel',{{'Prod','Use','EoL Disp','EoL Pot'}},'ylabel','[tonne]','legend',{names},'values',LCCO2','showtotal',1))
 
 
-
-
-
-
-
 %% FUNCTIONS
 
 %%
@@ -83,6 +78,7 @@ function model=initModel
   model.L=1;
   model.B=1;
   model.H=0.05;
+  
 end
 
 %%
@@ -102,14 +98,15 @@ end
 function model=computeOptimalVariable(model)
 %this function should determine the optimal values for the geometric
 %variable.
-  model.H=abs(model.P*model.L^3/(4*model.E*model.B*model.dmax)).^(1/3);
+  model.H=abs(model.P*model.L^3./(4*model.E*model.B*model.dmax)).^(1/3);
 end
 
 %%
 function mass=computeMass(model)
 %this function should determine the mass of the model based on its
 %geometric dimensions and material density.
-  mass=model.L.*model.B.*model.H.*model.rho;
+  mass=sum(model.L.*model.B.*model.H.*model.rho);
+  
 end
 
 %%

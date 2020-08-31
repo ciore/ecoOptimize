@@ -71,6 +71,7 @@ classdef ecoOptimize
           model.CO2Disp=sum(model.CO2Dispi.*A)/sum(A);
           model.CO2EoL=sum(model.CO2EoLi.*A)/sum(A);
           model.Cost=sum(model.Costi.*A)/sum(A);
+          
         case 'circular'
           I=pi*model.D.^4/64;
           A=pi*model.D.^2/4;
@@ -87,6 +88,33 @@ classdef ecoOptimize
           model.CO2Disp=model.CO2Dispi;
           model.CO2EoL=model.CO2EoLi;
           model.Cost=model.Costi;
+          
+        case 'sandwich'
+          A  = model.B.*model.H; %Cross section area in vector form. 
+          d1 = sum(model.H(1:2:3))/2+model.H(2); %Distance between face centroids
+          d2 = ([0 cumsum(model.H(1:end-1))]+model.H/2-sum(model.H)/2);
+          I0 = model.B.*model.H.^3/12;
+          I  = I0+A.*d2.^2;
+          e  = model.Ei(3)*model.H(3)*d1/dot(model.Ei(1:2:3),model.H(1:2:3)); %distance to neutral axis
+          sv = [e^2; (0.5*(model.H(1)+model.H(2))-e)^2; (d1-e)^2];
+          model.D = sum(model.Ei.*model.H.^3/12) + (model.Ei.*model.H)*sv; %Flexural rigidity, not simplified
+          model.S = model.Ei(2)*d1^2/model.H(2); %Shear stiffness, simplified.
+          model.Ai=A;
+          model.Ii=I;
+          model.E=sum(model.Ei.*I)/sum(I);
+          model.nu=sum(model.nui.*A)/sum(A);
+          model.rho=sum(model.rhoi.*A)/sum(A);
+          model.A=sum(A);
+          model.I=sum(I);
+          model.EProd=sum(model.EProdi.*A)/sum(A);
+          model.EDisp=sum(model.EDispi.*A)/sum(A);
+          model.EEoL=sum(model.EEoLi.*A)/sum(A);
+          model.CO2Prod=sum(model.CO2Prodi.*A)/sum(A);
+          model.CO2Disp=sum(model.CO2Dispi.*A)/sum(A);
+          model.CO2EoL=sum(model.CO2EoLi.*A)/sum(A);
+          model.Cost=sum(model.Costi.*A)/sum(A);
+          
+
       end
     end
     
@@ -102,7 +130,8 @@ classdef ecoOptimize
       Ep_kg=model.EProd; %[J/kg]
       Ep=sum(Ep_kg.*mass);
       % use phase
-      usemodel='simple';
+      %usemodel='simple';
+      usemodel = model.drivecycle;
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
@@ -116,6 +145,40 @@ classdef ecoOptimize
           diffEff=0.42; %[-] differential efficiency (petrol)
           Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
           Eu=sum(Eu_km_kg.*model.driveDistTotal.*mass); %[J]
+          
+        case 'NEDC'
+          % From Hamza:
+          r = 0.15; % Fraction of kinetic energy regained during deceleration, 15%
+          cr = 0.01; % Coefficient of rolling resistance, 0.01
+          g = 9.81; % Gravitation acceleration [m/s^2]
+          
+          % Extract cycle-dependent terms from function:
+          [CA, CR, CD] = drivecycle(usemodel);
+          W_inertial = CA; %Work needed to overcome inertial resistance [J/kg]
+          W_roll = (1-r)*g*cr*CR; %Work needed to overcome rolling resistance [J/kg]
+          
+          Eu = sum(W_roll+W_inertial)*mass*model.driveDistTotal;
+          
+        case 'WLTP'
+          %WLTP drive cycle, added by Robert Jonsson.
+          %This drive cycle includes different vehicle classes based on the
+          %power-to-weight ratio. This example uses class 3, which are
+          %vehicles with a pwr > 34. 
+          %Add the Excel-spread sheet to path
+          
+          % From Hamza:
+          r = 0.15; % Fraction of kinetic energy regained during deceleration, 15%
+          cr = 0.01; % Coefficient of rolling resistance, 0.01
+          g = 9.81; % Gravitation acceleration [m/s^2]
+          pwr = 'class3';
+          
+          % Extract cycle-dependent terms from function:
+          [CA, CR, CD] = drivecycle(usemodel,pwr);
+          W_inertial = CA; %Work needed to overcome inertial resistance [J/kg]
+          W_roll = (1-r)*g*cr*CR; %Work needed to overcome rolling resistance [J/kg]
+          
+          Eu = sum(W_roll+W_inertial)*mass*model.driveDistTotal;
+          
       end
       % disposal phase
       Ed_kg=model.EDisp; %[J/kg]
@@ -202,7 +265,10 @@ classdef ecoOptimize
       method=model.solver;
       switch method
         case 'beamEBAna'
-          beam=computeEulerBernoulli(model);
+          beam=computeEulerBernoulli(model,1);
+          fval(1)=max(abs(beam.w));
+        case 'beamTSAna'
+          beam=computeTimoshenko(model,1);
           fval(1)=max(abs(beam.w));
         case 'beamEBComsol'
           global comsol
@@ -232,7 +298,7 @@ classdef ecoOptimize
       global model materialsData
       fmax=model.fmax;
       for i=1:numel(x)
-        eval(['model.',xnam{i},'=x(i);'])
+          eval(['model.',xnam{i},'=x(i);'])
       end
       model=ecoOptimize.blendMaterials(model,materialsData);
       model=ecoOptimize.updateDependentVars(model);
