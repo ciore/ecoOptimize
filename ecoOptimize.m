@@ -215,6 +215,46 @@ classdef ecoOptimize
           fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]
           CO2u_km_kg=fuelUse_km_kg*CO2Fuel; %[kg/km/kg]
           CO2u=sum(CO2u_km_kg.*model.driveDistTotal.*mass); %[kg]
+        
+        case 'NEDC'
+          % From Hamza:
+          r = 0.15; % Fraction of kinetic energy regained during deceleration, 15%
+          cr = 0.01; % Coefficient of rolling resistance, 0.01
+          g = 9.81; % Gravitation acceleration [m/s^2]
+          
+          % Extract cycle-dependent terms from function:
+          [CA, CR, CD] = drivecycle(usemodel);  
+          
+          % Calculations
+          diffEff=0.42; %[-] differential efficiency (petrol)
+          Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
+          heatValueFuel=43.5*1e6*0.75; %[J/L]
+          CO2Fuel=2.31; %[kg/L]
+          fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]
+          CO2u_km_kg=fuelUse_km_kg*CO2Fuel; %[kg/km/kg]
+          CO2u=sum(CO2u_km_kg.*model.driveDistTotal.*mass); %[kg]
+          
+
+        case 'WLTP'
+          % From Hamza:
+          r = 0.15; % Fraction of kinetic energy regained during deceleration, 15%
+          cr = 0.01; % Coefficient of rolling resistance, 0.01
+          g = 9.81; % Gravitation acceleration [m/s^2]
+          pwr = 'class3';
+          
+          % Extract cycle-dependent terms from function:
+          [CA, CR, CD] = drivecycle(usemodel,pwr);  
+            
+          % Calculations
+          diffEff=0.42; %[-] differential efficiency (petrol)
+          Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
+          heatValueFuel=43.5*1e6*0.75; %[J/L]
+          CO2Fuel=2.31; %[kg/L]
+          fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]
+          CO2u_km_kg=fuelUse_km_kg*CO2Fuel; %[kg/km/kg]
+          CO2u=sum(CO2u_km_kg.*model.driveDistTotal.*mass); %[kg]
+          
+          
       end
       % disposal phase
       CO2d_kg=model.CO2Disp; %[kg/kg]
@@ -251,6 +291,44 @@ classdef ecoOptimize
           priceFuel=15; %[SEK/L]
           Costu_km_kg=fuelUse_km_kg*priceFuel; %[SEK/km/kg]
           Costu=sum(Costu_km_kg.*model.driveDistTotal.*mass); %[SEK]  
+          
+        case 'NEDC'
+          % From Hamza:
+          r = 0.15; % Fraction of kinetic energy regained during deceleration, 15%
+          cr = 0.01; % Coefficient of rolling resistance, 0.01
+          g = 9.81; % Gravitation acceleration [m/s^2]
+          
+          % Extract cycle-dependent terms from function:
+          [CA, CR, CD] = drivecycle(usemodel);
+          
+          %Calculations
+          diffEff=0.42; %[-] differential efficiency (petrol)
+          Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
+          heatValueFuel=43.5*1e6*0.75; %[J/L]
+          fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]       
+          priceFuel=15; %[SEK/L]
+          Costu_km_kg=fuelUse_km_kg*priceFuel; %[SEK/km/kg]
+          Costu=sum(Costu_km_kg.*model.driveDistTotal.*mass); %[SEK]
+          
+        case 'WLTP'
+          % From Hamza:
+          r = 0.15; % Fraction of kinetic energy regained during deceleration, 15%
+          cr = 0.01; % Coefficient of rolling resistance, 0.01
+          g = 9.81; % Gravitation acceleration [m/s^2]
+          pwr = 'class3';
+          
+          % Extract cycle-dependent terms from function:
+          [CA, CR, CD] = drivecycle(usemodel,pwr);  
+              
+          %Calculations
+          diffEff=0.42; %[-] differential efficiency (petrol)
+          Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
+          heatValueFuel=43.5*1e6*0.75; %[J/L]
+          fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]       
+          priceFuel=15; %[SEK/L]
+          Costu_km_kg=fuelUse_km_kg*priceFuel; %[SEK/km/kg]
+          Costu=sum(Costu_km_kg.*model.driveDistTotal.*mass); %[SEK]
+          
       end
       % disposal phase
       Costd=0; %[SEK]
