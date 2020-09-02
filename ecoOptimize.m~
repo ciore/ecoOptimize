@@ -60,8 +60,7 @@ classdef ecoOptimize
           
           %For the Sandwich configuration. This is only valid for 3-layer
           %configurations.
-          if numel(model.H)==3
-              d1 = sum(model.H(1:2:3))/2+model.H(2); %Distance between face centroids
+          if size(model.H)==3
               e  = model.Ei(3)*model.H(3)*d1/dot(model.Ei(1:2:3),model.H(1:2:3)); %distance to neutral axis
               sv = [e^2; (0.5*(model.H(1)+model.H(2))-e)^2; (d1-e)^2];
               model.D = sum(model.Ei.*model.H.^3/12) + (model.Ei.*model.H)*sv; %Flexural rigidity, not simplified
@@ -166,15 +165,15 @@ classdef ecoOptimize
                   t=readtable(tabledata);
               case 'WLTP1'
                   tabledata = 'WLTP.xlsx';
-                  pwr = 'class1';
+                  pwr = 'class 1';
                   t = readtable(tabledata,'Sheet',pwr);
               case 'WLTP2'
                   tabledata = 'WLTP.xlsx';
-                  pwr = 'class2';
+                  pwr = 'class 2';
                   t = readtable(tabledata,'Sheet',pwr);
               case 'WLTP3'
                   tabledata = 'WLTP.xlsx';
-                  pwr = 'class3';
+                  pwr = 'class 3';
                   t = readtable(tabledata,'Sheet',pwr);
           end
           
@@ -242,15 +241,15 @@ classdef ecoOptimize
                   t=readtable(tabledata);
               case 'WLTP1'
                   tabledata = 'WLTP.xlsx';
-                  pwr = 'class1';
+                  pwr = 'class 1';
                   t = readtable(tabledata,'Sheet',pwr);
               case 'WLTP2'
                   tabledata = 'WLTP.xlsx';
-                  pwr = 'class2';
+                  pwr = 'class 2';
                   t = readtable(tabledata,'Sheet',pwr);
               case 'WLTP3'
                   tabledata = 'WLTP.xlsx';
-                  pwr = 'class3';
+                  pwr = 'class 3';
                   t = readtable(tabledata,'Sheet',pwr);
           end
           
@@ -309,10 +308,9 @@ classdef ecoOptimize
           %more advanced model based on drive cycle energy
           crr=0.01*0.85; %[-] %coefficient of effective rolling resistance
           diffEff=0.42; %[-] differential efficiency (petrol)
-          r=0.15; % Fraction of kinetic energy regained during deceleration, 15%
-          cr=0.01; % Coefficient of rolling resistance, 0.01
-          g=9.81; % Gravitation acceleration [m/s^2]
-          heatValueFuel=43.5*1e6*0.75; %[J/L]
+          r = 0.15; % Fraction of kinetic energy regained during deceleration, 15%
+          cr = 0.01; % Coefficient of rolling resistance, 0.01
+          g = 9.81; % Gravitation acceleration [m/s^2]
           
           switch usecycle
               case 'NEDC'
@@ -320,15 +318,15 @@ classdef ecoOptimize
                   t=readtable(tabledata);
               case 'WLTP1'
                   tabledata = 'WLTP.xlsx';
-                  pwr = 'class1';
+                  pwr = 'class 1';
                   t = readtable(tabledata,'Sheet',pwr);
               case 'WLTP2'
                   tabledata = 'WLTP.xlsx';
-                  pwr = 'class2';
+                  pwr = 'class 2';
                   t = readtable(tabledata,'Sheet',pwr);
               case 'WLTP3'
                   tabledata = 'WLTP.xlsx';
-                  pwr = 'class3';
+                  pwr = 'class 3';
                   t = readtable(tabledata,'Sheet',pwr);
           end
           
@@ -350,16 +348,57 @@ classdef ecoOptimize
           CR=sum(dx); % [m] Rolling resistance constant 
           CD=sum(vel.^3.*dt); %[m^3/s^2] Drag resistance constant
           CA=sum(acc.*vel.*dt); %[m^2/s^2] Inertial resistance constant
-
-          %Energy calculations
-          Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
-          fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]  
           
-          %Cost calculations
+          
+          
+          
+          Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
+          heatValueFuel=43.5*1e6*0.75; %[J/L]
+          fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]       
           priceFuel=15; %[SEK/L]
           Costu_km_kg=fuelUse_km_kg*priceFuel; %[SEK/km/kg]
           Costu=sum(Costu_km_kg.*model.driveDistTotal.*mass); %[SEK]  
-
+          
+          
+          
+          
+        case 'NEDC'
+          % From Hamza:
+          r = 0.15; % Fraction of kinetic energy regained during deceleration, 15%
+          cr = 0.01; % Coefficient of rolling resistance, 0.01
+          g = 9.81; % Gravitation acceleration [m/s^2]
+          
+          % Extract cycle-dependent terms from function:
+          [CA, CR, CD] = drivecycle(usemodel);
+          
+          %Calculations
+          diffEff=0.42; %[-] differential efficiency (petrol)
+          Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
+          heatValueFuel=43.5*1e6*0.75; %[J/L]
+          fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]       
+          priceFuel=15; %[SEK/L]
+          Costu_km_kg=fuelUse_km_kg*priceFuel; %[SEK/km/kg]
+          Costu=sum(Costu_km_kg.*model.driveDistTotal.*mass); %[SEK]
+          
+        case 'WLTP'
+          % From Hamza:
+          r = 0.15; % Fraction of kinetic energy regained during deceleration, 15%
+          cr = 0.01; % Coefficient of rolling resistance, 0.01
+          g = 9.81; % Gravitation acceleration [m/s^2]
+          pwr = 'class3';
+          
+          % Extract cycle-dependent terms from function:
+          [CA, CR, CD] = drivecycle(usemodel,pwr);  
+              
+          %Calculations
+          diffEff=0.42; %[-] differential efficiency (petrol)
+          Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
+          heatValueFuel=43.5*1e6*0.75; %[J/L]
+          fuelUse_km_kg=Eu_km_kg/heatValueFuel; %[L/km/kg]       
+          priceFuel=15; %[SEK/L]
+          Costu_km_kg=fuelUse_km_kg*priceFuel; %[SEK/km/kg]
+          Costu=sum(Costu_km_kg.*model.driveDistTotal.*mass); %[SEK]
+          
       end
       % disposal phase
       Costd=0; %[SEK]
@@ -374,10 +413,10 @@ classdef ecoOptimize
       method=model.solver;
       switch method
         case 'beamEBAna'
-          beam=computeEulerBernoulli(model,model.plotcurves);
+          beam=computeEulerBernoulli(model,1);
           fval(1)=max(abs(beam.w));
         case 'beamTSAna'
-          beam=computeTimoshenko(model,model.plotcurves);
+          beam=computeTimoshenko(model,1);
           fval(1)=max(abs(beam.w));
         case 'beamEBComsol'
           global comsol

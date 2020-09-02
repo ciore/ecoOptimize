@@ -58,17 +58,19 @@ function model = initmodelSWBeam %This is used to set up the initial model
 model.objfunc='LCE'; %Objective function
 model.fmax=[5e-3]; %Maximum deflection
 model.driveDistTotal=100e3; %Driving distance of vehicle
-model.solver='beamTSAna'; %Solver used
-model.loadcase='cantilever_pt'; %Load case (pt = point load)
+model.solver='beamTSAna'; %Solver used Euler-Bernoulli (EB) or Timoshenko (TS)
+model.loadcase='simple_pt'; %Load case (pt = point load)
 model.P=-1e4; %Applied load
 model.xP=0.5; %Spanwise fraction of beam where load is applied
 model.L=1; %Beam length
-model.xsection='sandwich'; %Section type
+model.xsection='layered'; %Section type
 model.B=0.3; %Cross-section breadth
 model.H=[0.05 0.05 0.05]; %Beam thicknesses [lower face, core, upper face].
 model.material={'CFRP' 'PVC' 'CFRP'}; %Beam materials 
 model.alpha=[1 1 1]; %Material mixtures.
-model.drivecycle = 'WLTP';
+model.drivemodel = 'physicsbased';
+model.drivecycle = 'WLTP3';
+model.plotcurves = 'on'; %Option to plot displacement curves 
 end
 
 function dispModel(model,fill)
