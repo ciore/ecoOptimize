@@ -31,7 +31,7 @@ classdef ecoOptimize
         eval(['material.',fnames{j},'=zeros(size(model.alpha));'])
         for i=1:numel(model.alpha)
           if not(cellfun(@isempty,model.material(i)))
-            eval(['material.',fnames{j},'(i)=materialsData(ismember([materialsData.info],model.material(i))).',fnames{j},'{1};'])
+            eval(['material.',fnames{j},'(i)=materialsData(ismember({materialsData.info},model.material(i))).',fnames{j},';'])
           end
         end
         eval(['material.',fnames{j},'=sum(material.',fnames{j},'.*model.alpha,1);'])

@@ -31,7 +31,9 @@ if restart
     
   %% load material database
   global materialsData
-  materialsData=importdata('materialData.mat');
+  materialsData=readtable('materialData.xlsx','ReadRowNames',true);
+  materialsData=addvars(materialsData,materialsData.Row,'NewVariableName','info');
+  materialsData=table2struct(materialsData);
   
   %% initiate model of the panel
   global model
