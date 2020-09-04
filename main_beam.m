@@ -28,7 +28,7 @@ if restart
   addpath('../GCMMA-MMA-code-1.5') %path to GCMMA MATLAB functions
   addpath('../beamEB') %path to constraint solver [you could add a different solver]
   import ecoOptimize.*
-  
+    
   %% load material database
   global materialsData
   materialsData=importdata('materialData.mat');
@@ -110,3 +110,6 @@ axis([B0(i)-B(i)/10 B0(i)+B(i)+B(i)/10 H0(i)-H(i)/10 H0(i)+H(i)+H(i)/10])
 axis auto, axis equal
 xlabel('b [m]'), ylabel('h [m]')
 end
+
+
+

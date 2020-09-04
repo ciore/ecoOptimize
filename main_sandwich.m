@@ -18,7 +18,7 @@
 % 
 % main.m
 
-restart=1;
+restart=1; % clear and start from initial values if true/1
 
 if restart
   
