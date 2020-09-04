@@ -26,8 +26,10 @@ clear all
 addpath('.') %path to material database [you could pick a different material database]
 
 %% load material database
-materialsData=importdata('materialData.mat');
-
+materialsData=readtable('materialData.xlsx','ReadRowNames',true);
+materialsData=addvars(materialsData,materialsData.Row,'NewVariableName','info');
+materialsData=table2struct(materialsData);
+  
 %% iterate material alternatives
 i=0;
 for m=[1 4]
@@ -38,7 +40,7 @@ for m=[1 4]
   
   %% select a material
   model=setModelMaterial(model,materialsData(m));
-  names(i)=materialsData(m).info;
+  names(i)={materialsData(m).info};
   
   %% determine height to fit constraint and the resulting mass
   model=computeOptimalVariable(model);
@@ -87,15 +89,15 @@ end
 
 %%
 function model=setModelMaterial(model,materialsData)
-  model.E=materialsData.youngsModulus{1};
-  model.rho=materialsData.density{1};
-  model.EProd=materialsData.productionEnergy{1};
-  model.EDisp=materialsData.disposalEnergy{1};
-  model.EEoL=materialsData.eolEnergy{1};
-  model.CO2Prod=materialsData.productionCO2{1};
-  model.CO2Disp=materialsData.disposalCO2{1};
-  model.CO2EoL=materialsData.eolCO2{1};
-  model.Cost=materialsData.price{1};
+  model.E=materialsData.youngsModulus;
+  model.rho=materialsData.density;
+  model.EProd=materialsData.productionEnergy;
+  model.EDisp=materialsData.disposalEnergy;
+  model.EEoL=materialsData.eolEnergy;
+  model.CO2Prod=materialsData.productionCO2;
+  model.CO2Disp=materialsData.disposalCO2;
+  model.CO2EoL=materialsData.eolCO2;
+  model.Cost=materialsData.price;
 end
 
 %%
