@@ -61,16 +61,31 @@ figure(2), clf, gcmma.plotlive=1;
 gcmma.maxoutit=50;
 [gcmma,xval]=GCMMA.run(gcmma);
 [f0val,fval]=optFuncs(xval,xnam,false);
+figure(2), clf, GCMMA.plotIter(gcmma)
 h=xval(1:3)
 alpha=xval(4:6)
 
 %% view results
-figure(2), clf, GCMMA.plotIter(gcmma)
 % figure(1), dispModel(model,1)
+
 mass=computeMass(model)
 LCE=computeLCE(model)
 LCCO2=computeLCCO2(model)
-LCCost=computeLCCost(model)
+
+figure(3), clf
+subplot(2,1,1)
+bargraph(struct('title','Thickness','xlabel',{{''}},'ylabel','[m]','legend',['off']','values',[h],'showtotal',0))
+subplot(2,1,2)
+bargraph(struct('title','Mass','xlabel',{{''}},'ylabel','[kg]','legend',['off']','values',[mass],'showtotal',0))
+
+figure(4), clf
+subplot(2,1,1)
+bargraph(struct('title','Energy','xlabel',{{'Prod','Use','EoL Disp','EoL Pot'}},'ylabel','[GJ]','legend',['off']','values',LCE','showtotal',1))
+subplot(2,1,2)
+bargraph(struct('title','CO_2','xlabel',{{'Prod','Use','EoL Disp','EoL Pot'}},'ylabel','[tonne]','legend',['off']','values',LCCO2','showtotal',1))
+
+
+
 
 
 %% FUNCTIONS
