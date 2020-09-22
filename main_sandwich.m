@@ -27,6 +27,7 @@ if restart
   addpath('.') %path to material database [you could pick a different material database]
   addpath('../GCMMA-MMA-code-1.5') %path to GCMMA MATLAB functions
   addpath('../beamEB') %path to constraint solver [you could add a different solver]
+  addpath('../drivecycle')  %path to import drivecycle coefficients data
   import ecoOptimize.*
   
   %% load material database
@@ -40,7 +41,7 @@ if restart
   model=initModelSandwich; %define the model in function
   model=blendMaterials(model,materialsData); %blend materials from database according to alpha
   model=updateDependentVars(model);
-  figure(1), clf, dispModel(model,0)
+%   figure(1), clf, dispModel(model,0)
   
   %% set optimisation params
   xval=[model.H(1) model.H(2) model.H(3) model.alpha(1,1) model.alpha(1,2) model.alpha(1,3)]';
@@ -65,7 +66,7 @@ alpha=xval(4:6)
 
 %% view results
 figure(2), clf, GCMMA.plotIter(gcmma)
-figure(1), dispModel(model,1)
+% figure(1), dispModel(model,1)
 mass=computeMass(model)
 LCE=computeLCE(model)
 LCCO2=computeLCCO2(model)
@@ -79,6 +80,8 @@ function model=initModelSandwich
   model.objfunc='LCE';
   model.fmax=[5e-3];
   model.driveDistTotal=100e3;
+  model.useModel='physicsbased';
+  model.drivecycle=drivecycle.import('WLTP3'); % useModel must 'physicsbased' 
   model.solver='beamEBAna';
   model.loadcase='simple_pt';
   model.P=-1e4;

@@ -82,6 +82,7 @@ function model=initModelBeam
   model.objfunc='LCE';
   model.fmax=[1e-3];
   model.driveDistTotal=1e5;
+  model.useModel='simple';
   model.solver='beamEBAna';
   model.loadcase='simple_pt';
   model.P=-1e4;

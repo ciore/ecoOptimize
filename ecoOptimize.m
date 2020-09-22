@@ -102,7 +102,7 @@ classdef ecoOptimize
       Ep_kg=model.EProd; %[J/kg]
       Ep=sum(Ep_kg.*mass);
       % use phase
-      usemodel='simple';
+      usemodel=model.useModel;
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
@@ -110,9 +110,9 @@ classdef ecoOptimize
           Eu=sum(Eu_km_kg.*model.driveDistTotal.*mass); %[J]
         case 'physicsbased'
           %more advanced model based on drive cycle energy (O'Reilly (2016))
-          crr=0.01*0.85; %[-] %coefficient of effective rolling resistance
-          CR=11013; %[m] drive cycle rolling resistance constant
-          CA=1227; %[m^2/s^2] drive cycle acceleration constant
+          crr=0.01*(1-model.drivecycle.r); %[-] %coefficient of effective rolling resistance
+          CR=model.drivecycle.cr; %[m] drive cycle rolling resistance constant
+          CA=model.drivecycle.ca; %[m^2/s^2] drive cycle acceleration constant
           diffEff=0.42; %[-] differential efficiency (petrol)
           Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
           Eu=sum(Eu_km_kg.*model.driveDistTotal.*mass); %[J]
@@ -134,7 +134,7 @@ classdef ecoOptimize
       CO2p_kg=model.CO2Prod; %[kg/kg]
       CO2p=sum(CO2p_kg.*mass); %[kg]
       % use phase
-      usemodel='simple';
+      usemodel=model.useModel;
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
@@ -142,9 +142,9 @@ classdef ecoOptimize
           CO2u=sum(CO2u_km_kg.*model.driveDistTotal.*mass); %[kg]
         case 'physicsbased'
           %more advanced model based on drive cycle energy
-          crr=0.01*0.85; %[-] %coefficient of effective rolling resistance
-          CR=11013; %[m] drive cycle rolling resistance constant
-          CA=1227; %[m^2/s^2] drive cycle acceleration constant
+          crr=0.01*(1-model.drivecycle.r); %[-] %coefficient of effective rolling resistance
+          CR=model.drivecycle.cr; %[m] drive cycle rolling resistance constant
+          CA=model.drivecycle.ca; %[m^2/s^2] drive cycle acceleration constant
           diffEff=0.42; %[-] differential efficiency (petrol)
           Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
           heatValueFuel=43.5*1e6*0.75; %[J/L]
@@ -170,7 +170,7 @@ classdef ecoOptimize
       Costp_kg=model.Cost; %[SEK/kg]
       Costp=sum(Costp_kg.*mass); %[SEK]
       % use phase
-      usemodel='simple';
+      usemodel=model.useModel;
       switch usemodel
         case 'simple'
           %simple model based on fuel efficiency
@@ -178,9 +178,9 @@ classdef ecoOptimize
           Costu=sum(Costu_km_kg.*model.driveDistTotal*mass); %[J]
         case 'physicsbased'
           %more advanced model based on drive cycle energy
-          crr=0.01*0.85; %[-] %coefficient of effective rolling resistance
-          CR=11013; %[m] drive cycle rolling resistance constant
-          CA=1227; %[m^2/s^2] drive cycle acceleration constant
+          crr=0.01*(1-model.drivecycle.r); %[-] %coefficient of effective rolling resistance
+          CR=model.drivecycle.cr; %[m] drive cycle rolling resistance constant
+          CA=model.drivecycle.ca; %[m^2/s^2] drive cycle acceleration constant
           diffEff=0.42; %[-] differential efficiency (petrol)
           Eu_km_kg=(9.81*crr*CR+CA)/CR*1e3/diffEff; %[J/km/kg]
           heatValueFuel=43.5*1e6*0.75; %[J/L]

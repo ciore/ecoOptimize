@@ -88,6 +88,7 @@ function model=initModelTruss
   model.objfunc='Mass';
   model.fmax=[1e-2];
   model.driveDistTotal=1e5;
+  model.useModel='simple';
   model.solver='trussJVW';
   model.node=[0 0; 1 0; 0.25 -0.05; 0.5 -0.05; 0.75 -0.05; 0.25 0; 0.5 0; 0.75 0]; %size nx2
   model.member=[1 3; 3 4; 4 5; 5 2; 1 6; 6 7; 7 8; 8 2; 3 6; 3 7; 7 4; 7 5; 5 8]; %size mx2
